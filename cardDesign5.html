@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>cardDesign4 — Coder Profile Card</title>
+
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@600;700&family=Source+Code+Pro:wght@400;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Tailwind (utility quick-styles) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* -------------------------
+       Variables & base theme
+       ------------------------- */
+    :root {
+      --bg: #060616;
+      /* deep navy */
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --glass: rgba(255, 255, 255, 0.06);
+      --accent1: #3b82f6;
+      /* blue */
+      --accent2: #9333ea;
+      /* purple */
+      --accent3: #06b6d4;
+      /* teal */
+      --accent4: #f59e0b;
+      /* amber */
+      --shadow-a: 0 8px 30px rgba(59, 130, 246, 0.08);
+      --shadow-b: 0 8px 30px rgba(147, 51, 234, 0.06);
+      --card-radius: 22px;
+      --card-w: 420px;
+      --card-h: 520px;
+    }
+
+    html,
+    body {
+      height: 100%
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      /* background tuned to match card theme: soft accent glows on deep navy */
+      background:
+        radial-gradient(900px 480px at 8% 12%, rgba(59, 130, 246, 0.08), transparent),
+        radial-gradient(700px 300px at 92% 86%, rgba(147, 51, 234, 0.06), transparent),
+        linear-gradient(180deg, rgba(6, 11, 24, 1) 0%, var(--bg) 100%);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    /* -------------------------
+       Layout wrapper & sizing
+       ------------------------- */
+    .card-wrap {
+      width: var(--card-w);
+      max-width: 92vw;
+      margin: auto;
+      height: var(--card-h);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* initial hidden state for landing animation */
+      opacity: 0;
+      transform: translateY(28px) scale(0.995);
+      filter: blur(8px);
+      transition: all 700ms cubic-bezier(.2, .9, .29, 1);
+    }
+
+    /* reveal after DOM load */
+    .card-wrap.loaded {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+    }
+
+    /* morph-out when scrolled away */
+    .card-wrap.out {
+      opacity: 0.12;
+      transform: translateY(40px) scale(0.98);
+      filter: blur(8px) saturate(0.8);
+      pointer-events: none;
+    }
+
+    /* -------------------------
+       Card base & visuals
+       ------------------------- */
+    .card {
+      width: 100%;
+      height: 100%;
+      border-radius: var(--card-radius);
+      position: relative;
+      overflow: visible;
+      display: block;
+      padding: 28px;
+      box-sizing: border-box;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      box-shadow: var(--shadow-a), var(--shadow-b);
+      transform-style: preserve-3d;
+      will-change: transform;
+      transition: transform 300ms cubic-bezier(.2, .9, .29, 1), box-shadow 250ms ease;
+    }
+
+    /* your animated gradient border (user-provided + small adjustments) */
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: var(--card-radius);
+      border: 2px solid transparent;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent3), var(--accent4));
+      background-size: 300% 300%;
+      animation: borderSweep 4s linear infinite;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes borderSweep {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    /* subtle gradient morphing background inside card */
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: var(--card-radius);
+      z-index: 0;
+      /* behind content */
+      background: linear-gradient(120deg, rgba(59, 130, 246, 0.06), rgba(147, 51, 234, 0.04) 35%, rgba(6, 182, 212, 0.03) 65%, rgba(245, 158, 11, 0.02));
+      background-size: 600% 600%;
+      animation: gradientFlow 10s ease-in-out infinite;
+      filter: blur(22px) saturate(1.05);
+      pointer-events: none;
+    }
+
+    @keyframes gradientFlow {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    /* shimmer strip */
+    .card .shimmer {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      border-radius: var(--card-radius);
+      pointer-events: none;
+      mix-blend-mode: overlay;
+      opacity: 0.12;
+    }
+
+    .card .shimmer::before {
+      content: "";
+      position: absolute;
+      top: -40%;
+      left: -40%;
+      width: 160%;
+      height: 180%;
+      transform: rotate(-18deg);
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.18) 40%, rgba(255, 255, 255, 0));
+      animation: shimmer 4.2s linear infinite;
+      filter: blur(10px);
+    }
+
+    @keyframes shimmer {
+      0% {
+        transform: translateX(-100%) rotate(-18deg)
+      }
+
+      100% {
+        transform: translateX(100%) rotate(-18deg)
+      }
+    }
+
+    /* pulse glow */
+    @keyframes pulseGlow {
+      0% {
+        box-shadow: 0 6px 30px rgba(59, 130, 246, 0.06), inset 0 0 40px rgba(147, 51, 234, 0.02);
+      }
+
+      50% {
+        box-shadow: 0 20px 60px rgba(59, 130, 246, 0.08), inset 0 0 50px rgba(6, 182, 212, 0.02);
+        transform: scale(1.002);
+      }
+
+      100% {
+        box-shadow: 0 6px 30px rgba(59, 130, 246, 0.06), inset 0 0 40px rgba(147, 51, 234, 0.02);
+        transform: scale(1);
+      }
+    }
+
+    /* reduce heavy motion for prefers-reduced-motion */
+    @media (prefers-reduced-motion: reduce) {
+
+      .card::after,
+      .card::before,
+      .card .shimmer::before {
+        animation: none !important;
+      }
+
+      .card,
+      .card-wrap {
+        transition: none !important;
+      }
+    }
+
+    /* -------------------------
+       Card content stacking (z-index)
+       ------------------------- */
+    .card-inner {
+      position: relative;
+      z-index: 5;
+      /* above decorative pseudo elements */
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 14px;
+    }
+
+    /* avatar container */
+    .avatar-wrap {
+      width: 260px;
+      height: 260px;
+      border-radius: 9999px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+      margin-top: 2px;
+      transform-style: preserve-3d;
+      will-change: transform;
+      z-index: 6;
+    }
+
+    /* avatar image */
+    .avatar {
+      width: 230px;
+      height: 230px;
+      border-radius: 9999px;
+      object-fit: cover;
+      border: 6px solid rgba(255, 255, 255, 0.06);
+      box-shadow: 0 10px 30px rgba(2, 6, 23, 0.6), 0 6px 18px rgba(0, 0, 0, 0.5), 0 0 40px rgba(59, 130, 246, 0.05);
+      display: block;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+    }
+
+    /* code/matrix overlay behind avatar */
+    .code-overlay {
+      position: absolute;
+      width: 95%;
+      height: 95%;
+      border-radius: 9999px;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      mix-blend-mode: overlay;
+      opacity: 0.14;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='none'/%3E%3Ctext x='0' y='10' font-size='6' fill='%23ffffff' opacity='0.06'%3E1010101010101010%3C/text%3E%3C/text%3E%3C/svg%3E");
+      transform: translateZ(-20px) scale(1.02);
+      filter: blur(0.6px) contrast(1.1);
+    }
+
+    /* Title & meta */
+    .title h2 {
+      font-family: "Orbitron", sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      font-size: 1.28rem;
+      margin: 0;
+      color: white;
+      text-transform: uppercase;
+      z-index: 8;
+      text-align: center;
+    }
+
+    .title p {
+      margin: 0;
+      color: #cbd5e1;
+      font-size: 0.9rem;
+      z-index: 8;
+    }
+
+    /* badges */
+    .meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      z-index: 8;
+    }
+
+    .badge {
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.02));
+      color: #e6eefc;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+    }
+
+    /* subtitle/bio */
+    .bio {
+      font-style: italic;
+      color: #cbd5e1;
+      font-size: 0.92rem;
+      text-align: center;
+      max-width: 85%;
+      z-index: 8;
+    }
+
+    /* social icons row */
+    .socials {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      z-index: 8;
+      margin-top: 6px;
+    }
+
+    .socials a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      transition: transform 180ms ease, box-shadow 180ms ease, color 180ms ease;
+    }
+
+    .socials a svg {
+      width: 20px;
+      height: 20px;
+      color: inherit
+    }
+
+    .socials a:hover {
+      transform: translateY(-6px) scale(1.06);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+      color: var(--accent4)
+    }
+
+    /* on hover lift for card */
+    .card.hover-lift {
+      transform: translateY(-12px) scale(1.03);
+    }
+
+    /* reveal states for text */
+    .title,
+    .meta,
+    .bio,
+    .socials {
+      transform: translateY(10px);
+      opacity: 0;
+      transition: transform 520ms cubic-bezier(.2, .9, .29, 1), opacity 520ms ease;
+    }
+
+    .card.revealed .title,
+    .card.revealed .meta,
+    .card.revealed .bio,
+    .card.revealed .socials {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* responsive adjustments */
+    @media (max-width:480px) {
+      :root {
+        --card-w: 340px;
+        --card-h: 480px;
+      }
+
+      .avatar-wrap {
+        width: 220px;
+        height: 220px
+      }
+
+      .avatar {
+        width: 196px;
+        height: 196px
+      }
+
+      .title h2 {
+        font-size: 1.05rem
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!--
+    cardWrap: controls landing/reveal and morph-out on scroll
+    card: main element to apply tilt transforms to
+  -->
+  <div class="card-wrap" id="cardWrap" aria-label="Profile card: Kunal Datkhile — coder profile" role="region">
+    <article id="card" class="card auto-act" aria-hidden="false">
+
+      <!-- decorative shimmer overlay (pseudo before/after added via CSS too) -->
+      <div class="shimmer" aria-hidden="true"></div>
+
+      <div class="card-inner">
+
+        <!-- Avatar area -->
+        <div class="avatar-wrap" id="avatarWrap" aria-hidden="false">
+          <!-- Avatar: replace URL below as needed -->
+          <img class="avatar" id="avatarImg"
+            src="https://avatars.dicebear.com/api/avataaars/kunal-coder.svg?background=%23071029"
+            alt="Coder avatar — Kunal" width="230" height="230" loading="lazy" />
+          <!-- code overlay behind avatar (decorative) -->
+          <div class="code-overlay" aria-hidden="true"></div>
+        </div>
+
+        <!-- Title block -->
+        <div class="title">
+          <h2 id="nameTitle">KUNAL DATKHILE</h2>
+          <p id="subtitle">BTech • Computer Engineering • Tutor</p>
+        </div>
+
+        <!-- Short bio -->
+        <div class="bio" id="bio">“Building tools, teaching code, and crafting solutions — learning by doing.”</div>
+
+        <!-- Badges / meta -->
+        <div class="meta" aria-hidden="false">
+          <span class="badge">Java</span>
+          <span class="badge">Python</span>
+          <span class="badge">C++</span>
+        </div>
+
+        <!-- Social links -->
+        <div class="socials" role="navigation" aria-label="social links">
+          <a href="https://linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+            <!-- LinkedIn icon -->
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path
+                d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.762 2.239 5 5 5h14c2.762 0 5-2.238 5-5v-14c0-2.761-2.238-5-5-5zm-11 20h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.784-1.75-1.75s.784-1.75 1.75-1.75 1.75.784 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.5c0-1.104-.896-2-2-2s-2 .896-2 2v5.5h-3v-11h3v1.268c.84-1.033 2.091-1.268 3.25-1.268 2.209 0 4 1.791 4 4v7z" />
+            </svg>
+          </a>
+          <a href="https://twitter.com" target="_blank" rel="noopener" aria-label="Twitter profile">
+            <!-- Twitter icon -->
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path
+                d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.956-2.178-1.555-3.594-1.555-2.723 0-4.934 2.211-4.934 4.934 0 .387.044.764.128 1.125-4.102-.206-7.738-2.172-10.173-5.162-.425.73-.667 1.577-.667 2.482 0 1.712.872 3.224 2.197 4.112-.81-.026-1.57-.248-2.236-.616v.062c0 2.39 1.7 4.384 3.953 4.84-.414.113-.85.173-1.299.173-.318 0-.627-.031-.929-.088.628 1.956 2.449 3.38 4.604 3.421-1.69 1.324-3.826 2.114-6.145 2.114-.399 0-.793-.023-1.182-.069 2.192 1.406 4.798 2.227 7.597 2.227 9.119 0 14.108-7.557 14.108-14.108 0-.215-.005-.43-.014-.643.969-.698 1.81-1.57 2.476-2.564z" />
+            </svg>
+          </a>
+        </div>
+
+      </div> <!-- /.card-inner -->
+    </article>
+  </div>
+
+  <!-- -----------------------------
+       JavaScript: Tilt, animations,
+       idle pulse, IntersectionObserver
+       ----------------------------- -->
+  <script>
+    (function () {
+      // ---------- Config / Selectors ----------
+      const wrap = document.getElementById('cardWrap');
+      const card = document.getElementById('card');
+      const avatarWrap = document.getElementById('avatarWrap');
+      const avatarImg = document.getElementById('avatarImg');
+
+      // Fallback avatar — change if you want local asset in production
+      const FALLBACK = "https://i.pravatar.cc/400?u=cardDesign4";
+
+      // Respect user motion preference
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // State for tilt smoothing
+      let targetX = 0, targetY = 0, currentX = 0, currentY = 0, rafId = null;
+      let isPointerOver = false;
+      let lastPointerTime = Date.now();
+      let idleTimer = null;
+      const IDLE_MS = 4200;
+
+      // ---------- Utility ----------
+      const lerp = (a, b, n) => (1 - n) * a + n * b;
+
+      // ---------- Landing reveal ----------
+      // small timed reveal - add .loaded then .revealed for inner content
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => wrap.classList.add('loaded'), 80);
+        // reveal card inner text slightly after landing
+        setTimeout(() => card.classList.add('revealed'), 520);
+        // start RAF loop unless reduced motion
+        if (!reduceMotion) startRAF();
+      });
+
+      // ---------- Image fallback ----------
+      avatarImg.addEventListener('error', () => {
+        avatarImg.src = FALLBACK;
+      });
+
+      // ---------- Pointer handling for tilt ----------
+      function onPointerMove(e) {
+        lastPointerTime = Date.now();
+        const rect = card.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const px = (e.clientX ?? e.touches?.[0]?.clientX) || cx;
+        const py = (e.clientY ?? e.touches?.[0]?.clientY) || cy;
+        // map to -1..1
+        const nx = (px - cx) / (rect.width / 2);
+        const ny = (py - cy) / (rect.height / 2);
+        // clamp
+        targetX = Math.max(-1, Math.min(1, nx));
+        targetY = Math.max(-1, Math.min(1, ny));
+        // mark pointer over
+        isPointerOver = true;
+        wrap.classList.add('hovering');
+        // pause auto animations visually (class)
+        card.classList.add('hover-lift');
+        // also pause shimmer by lowering opacity quickly
+        // we'll remove hover state on pointerleave
+        resetIdleTimer();
+      }
+
+      function onPointerLeave() {
+        isPointerOver = false;
+        targetX = 0; targetY = 0;
+        wrap.classList.remove('hovering');
+        card.classList.remove('hover-lift');
+        resetIdleTimer();
+      }
+
+      // attach both mouse and touch
+      window.addEventListener('pointermove', onPointerMove, { passive: true });
+      window.addEventListener('touchmove', onPointerMove, { passive: true });
+      window.addEventListener('pointerleave', onPointerLeave);
+      window.addEventListener('touchend', onPointerLeave);
+
+      // ---------- RequestAnimationFrame loop for smoothing ----------
+      function startRAF() {
+        if (rafId) return;
+        const friction = 0.12; // smoothing factor
+        function loop() {
+          currentX = lerp(currentX, targetX, friction);
+          currentY = lerp(currentY, targetY, friction);
+
+          // apply transforms (map -1..1 to degrees)
+          const degX = currentY * 9; // rotateX
+          const degY = currentX * -9; // rotateY (invert for natural feel)
+          // subtle scale difference for parallax depth
+          const scale = 1 + Math.abs(currentX) * 0.01 + Math.abs(currentY) * 0.01;
+
+          // apply to card
+          card.style.transform = `perspective(1000px) rotateX(${degX}deg) rotateY(${degY}deg) scale(${scale})`;
+
+          // avatar parallax (smaller)
+          const avatarTx = currentX * -10; // pixels
+          const avatarTy = currentY * -6;
+          const avatarRotate = currentX * -3;
+          avatarWrap.style.transform = `translate3d(${avatarTx}px, ${avatarTy}px, 12px) rotateZ(${avatarRotate}deg)`;
+
+          rafId = requestAnimationFrame(loop);
+        }
+        rafId = requestAnimationFrame(loop);
+      }
+
+      function stopRAF() {
+        if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      }
+
+      // stop RAF when user prefers reduced motion
+      if (reduceMotion) stopRAF();
+
+      // ---------- Idle micro-pulse ----------
+      function doIdlePulse() {
+        try {
+          avatarWrap.animate([
+            { transform: avatarWrap.style.transform },
+            { transform: avatarWrap.style.transform + ' scale(1.02)' },
+            { transform: avatarWrap.style.transform }
+          ], { duration: 820, easing: 'cubic-bezier(.2,.9,.29,1)' });
+        } catch (e) { }
+      }
+
+      function resetIdleTimer() {
+        if (idleTimer) clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => {
+          if (!isPointerOver) doIdlePulse();
+        }, IDLE_MS);
+      }
+      resetIdleTimer();
+
+      // ---------- IntersectionObserver for morph-out ----------
+      if ('IntersectionObserver' in window) {
+        const obs = new IntersectionObserver(entries => {
+          entries.forEach(e => {
+            if (!e.isIntersecting) wrap.classList.add('out');
+            else wrap.classList.remove('out');
+          });
+        }, { threshold: 0.2 });
+        obs.observe(wrap);
+      }
+
+      // ---------- Pause heavy auto animations on pointer hover (visual) ----------
+      card.addEventListener('pointerenter', () => {
+        // reduce opacity of pseudo animated elements by toggling a class - handled by CSS via hover-lift
+        card.classList.add('hover-lift');
+      });
+      card.addEventListener('pointerleave', () => {
+        card.classList.remove('hover-lift');
+      });
+
+      // ---------- Clean up on unload ----------
+      window.addEventListener('unload', () => { stopRAF(); });
+
+      // ---------- Respect reduced motion dynamically (if user changes settings) ----------
+      if ('media' in window.matchMedia('(prefers-reduced-motion: reduce)')) {
+        window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
+          if (e.matches) { stopRAF(); } else { startRAF(); }
+        });
+      }
+
+      // Start RAF if not reducedMotion
+      if (!reduceMotion) startRAF();
+
+    })();
+  </script>
+</body>
+
+</html>

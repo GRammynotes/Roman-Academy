@@ -1,0 +1,287 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #f4efe5;
+  color: #07152a;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(116deg, rgba(3, 15, 32, 0.98) 0%, rgba(3, 20, 42, 0.96) 42%, transparent 42.2%),
+    linear-gradient(90deg, rgba(214, 162, 44, 0.2), transparent 28%, rgba(214, 162, 44, 0.16) 72%, transparent),
+    radial-gradient(circle at 82% 14%, rgba(255, 255, 255, 0.78), transparent 30%),
+    linear-gradient(180deg, rgba(244, 239, 229, 0.94), rgba(244, 239, 229, 0.9));
+  opacity: 1;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 16px;
+  pointer-events: none;
+  border: 1px solid rgba(202, 145, 31, 0.58);
+  z-index: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply relative overflow-hidden border shadow-elite backdrop-blur;
+    border-color: rgba(202, 145, 31, 0.23);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(247, 241, 230, 0.74)),
+      linear-gradient(135deg, rgba(6, 22, 44, 0.1), transparent);
+    color: #07152a;
+  }
+
+  .glass-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    border: 1px solid transparent;
+    background: linear-gradient(135deg, rgba(214, 162, 44, 0.72), rgba(255, 255, 255, 0.05), rgba(6, 22, 44, 0.35)) border-box;
+    mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0.55;
+  }
+
+  .gold-line {
+    @apply border border-gold-400/40 bg-gold-400/10 text-gold-300;
+  }
+
+  .cover-panel {
+    background:
+      linear-gradient(112deg, rgba(3, 15, 32, 0.98) 0%, rgba(4, 22, 45, 0.98) 67%, transparent 67.4%),
+      linear-gradient(180deg, rgba(6, 17, 31, 0.94), rgba(7, 21, 42, 0.98));
+    border: 1px solid rgba(214, 162, 44, 0.5);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 24px 70px rgba(3, 15, 32, 0.18);
+  }
+
+  .cream-panel {
+    background: rgba(247, 241, 230, 0.9);
+    border: 1px solid rgba(202, 145, 31, 0.22);
+    color: #07152a;
+  }
+}
+
+.roman-wordmark {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  color: #fff;
+}
+
+.roman-crest {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 34px;
+  margin-bottom: 3px;
+  color: #d6a22c;
+}
+
+.roman-crest::before,
+.roman-crest::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 28px;
+  border: 2px solid #d6a22c;
+  border-top: 0;
+  opacity: 0.9;
+}
+
+.roman-crest::before {
+  left: 4px;
+  border-right: 0;
+  border-radius: 0 0 0 22px;
+  transform: rotate(-22deg);
+}
+
+.roman-crest::after {
+  right: 4px;
+  border-left: 0;
+  border-radius: 0 0 22px 0;
+  transform: rotate(22deg);
+}
+
+.roman-crest-book {
+  font-size: 26px;
+  transform: rotate(90deg);
+}
+
+.roman-name {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.18rem;
+}
+
+.roman-gold {
+  font-family: Georgia, Cambria, serif;
+  font-size: clamp(2.6rem, 7vw, 6.4rem);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #d6a22c;
+  background: linear-gradient(180deg, #fff1a4 0%, #dba936 34%, #8b5611 52%, #f4d36a 78%, #a76a16 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.34), 0 9px 18px rgba(0, 0, 0, 0.28);
+}
+
+.roman-white {
+  position: relative;
+  font-family: Georgia, Cambria, serif;
+  font-size: clamp(1.55rem, 4.1vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.roman-white::before,
+.roman-white::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 52px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #d6a22c);
+}
+
+.roman-white::before {
+  right: calc(100% + 14px);
+}
+
+.roman-white::after {
+  left: calc(100% + 14px);
+  transform: rotate(180deg);
+}
+
+.roman-track {
+  margin-top: 1rem;
+  color: #e6b33d;
+  font-family: Georgia, Cambria, serif;
+  font-size: clamp(1.2rem, 2.6vw, 2.15rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.32);
+}
+
+.roman-wordmark-compact .roman-crest {
+  width: 34px;
+  height: 20px;
+  margin-bottom: 1px;
+}
+
+.roman-wordmark-compact .roman-crest::before,
+.roman-wordmark-compact .roman-crest::after {
+  width: 10px;
+  height: 17px;
+  border-width: 1px;
+}
+
+.roman-wordmark-compact .roman-crest-book {
+  font-size: 15px;
+}
+
+.roman-wordmark-compact .roman-gold {
+  font-size: 1.7rem;
+}
+
+.roman-wordmark-compact .roman-white {
+  font-size: 0.98rem;
+  letter-spacing: 0.14em;
+}
+
+.roman-wordmark-compact .roman-white::before,
+.roman-wordmark-compact .roman-white::after {
+  width: 18px;
+}
+
+.roman-wordmark-compact .roman-track {
+  margin-top: 0.35rem;
+  font-size: 0.76rem;
+}
+
+.premium-profile-card {
+  transform-style: preserve-3d;
+  transition: transform 260ms ease, box-shadow 260ms ease;
+}
+
+.premium-profile-card::before,
+.premium-profile-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.premium-profile-card::before {
+  background: linear-gradient(115deg, rgba(59, 130, 246, 0.08), rgba(214, 162, 44, 0.14), rgba(6, 182, 212, 0.06));
+  filter: blur(18px);
+  opacity: 0.9;
+}
+
+.premium-profile-card::after {
+  border: 2px solid transparent;
+  background: linear-gradient(90deg, #d6a22c, #fff1a4, #08315d, #d6a22c) border-box;
+  background-size: 260% 260%;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: premium-border 5s linear infinite;
+}
+
+.premium-profile-card:hover {
+  transform: perspective(900px) rotateX(1.2deg) rotateY(-1.8deg) translateY(-4px);
+  box-shadow: 0 28px 90px rgba(3, 15, 32, 0.32);
+}
+
+@keyframes premium-border {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 260% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-profile-card,
+  .premium-profile-card::after {
+    animation: none;
+    transition: none;
+  }
+}

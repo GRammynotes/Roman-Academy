@@ -1,0 +1,276 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  TEACHER
+  STUDENT
+}
+
+enum ClassLevel {
+  ELEVEN
+  TWELVE
+}
+
+enum Stream {
+  SCIENCE_PCM
+  COMMERCE_ADDON
+  NEET_ADDON
+}
+
+enum TestType {
+  WEEKLY_CHAPTER
+  MONTHLY
+  QUARTERLY
+  FULL_LENGTH_MOCK
+  REVISION_TEST
+}
+
+enum ChapterStatus {
+  PLANNED
+  ONGOING
+  COMPLETED
+  CATCH_UP
+  REVISION
+}
+
+enum DraftStatus {
+  DRAFT
+  TEACHER_REVIEW
+  APPROVED
+  SENT
+  FAILED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  role         Role
+  username     String   @unique
+  passwordHash String
+  firstLogin   Boolean  @default(true)
+  student      Student?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Student {
+  id              String             @id @default(cuid())
+  userId          String             @unique
+  user            User               @relation(fields: [userId], references: [id])
+  fullName        String
+  classLevel      ClassLevel
+  stream          Stream
+  batchType       String
+  batchId         String?
+  batch           Batch?             @relation(fields: [batchId], references: [id])
+  joinedDate      DateTime
+  whatsappContact String?
+  parentContact   String?
+  catchUpMode     Boolean            @default(false)
+  archived        Boolean            @default(false)
+  notes           String?
+  testResults     StudentTestResult[]
+  syllabus        StudentChapter[]
+  attendance      Attendance[]
+  ranks           RankHistory[]
+  notifications   Notification[]
+  drafts          WhatsAppDraft[]
+
+  @@index([classLevel])
+  @@index([stream])
+  @@index([batchId])
+}
+
+model Batch {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  classLevel    ClassLevel
+  stream        Stream
+  startDate     DateTime
+  endDate       DateTime?
+  students      Student[]
+  scheduledTests ScheduledTest[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model ScheduledTest {
+  id            String   @id @default(cuid())
+  batchId       String
+  batch         Batch    @relation(fields: [batchId], references: [id])
+  testName      String
+  testType      TestType
+  scheduledDate DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([batchId, testName, testType])
+  @@index([batchId])
+  @@index([scheduledDate])
+}
+
+model Test {
+  id           String              @id @default(cuid())
+  testName     String
+  testType     TestType
+  classLevel   ClassLevel
+  stream       Stream
+  date         DateTime
+  totalMarks   Int
+  chapters     TestChapter[]
+  results      StudentTestResult[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([classLevel])
+  @@index([stream])
+  @@index([date])
+  @@index([testType])
+}
+
+model StudentTestResult {
+  id              String        @id @default(cuid())
+  studentId       String
+  testId          String
+  student         Student       @relation(fields: [studentId], references: [id])
+  test            Test          @relation(fields: [testId], references: [id])
+  subjectMarks    SubjectMark[]
+  totalScored     Int
+  percentage      Float
+  rank            Int?
+  teacherNote     String?
+  aiSummary       String?
+  whatsappStatus  DraftStatus   @default(DRAFT)
+  alertStatus     String        @default("pending")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([studentId, testId])
+  @@index([studentId])
+  @@index([testId])
+}
+
+model SubjectMark {
+  id        String            @id @default(cuid())
+  resultId  String
+  result    StudentTestResult @relation(fields: [resultId], references: [id])
+  subject   String
+  scored    Int
+  maxMarks  Int
+
+  @@index([subject])
+}
+
+model Chapter {
+  id              String           @id @default(cuid())
+  chapterName     String
+  subject         String
+  classLevel      ClassLevel
+  stream          Stream
+  cetRelevance    String
+  boardImportance String
+  scoreImpact     Int              @default(0)
+  studentProgress StudentChapter[]
+  tests           TestChapter[]
+
+  @@unique([chapterName, subject, classLevel, stream])
+  @@index([chapterName])
+  @@index([classLevel])
+  @@index([stream])
+}
+
+model StudentChapter {
+  id                 String        @id @default(cuid())
+  studentId          String
+  chapterId          String
+  student            Student       @relation(fields: [studentId], references: [id])
+  chapter            Chapter       @relation(fields: [chapterId], references: [id])
+  status             ChapterStatus @default(PLANNED)
+  isAlternateStream  Boolean       @default(false)
+  lastTestMarksGroup String?
+  nextChapterPlanned String?
+  updatedAt          DateTime      @updatedAt
+
+  @@unique([studentId, chapterId, isAlternateStream])
+  @@index([studentId])
+}
+
+model TestChapter {
+  testId    String
+  chapterId String
+  test      Test    @relation(fields: [testId], references: [id])
+  chapter   Chapter @relation(fields: [chapterId], references: [id])
+
+  @@id([testId, chapterId])
+  @@index([chapterId])
+}
+
+model Attendance {
+  id                String   @id @default(cuid())
+  studentId         String
+  student           Student  @relation(fields: [studentId], references: [id])
+  date              DateTime
+  streamLabel       String
+  attended          Boolean
+  isAlternateStream Boolean  @default(false)
+
+  @@index([studentId])
+  @@index([date])
+}
+
+model RankHistory {
+  id        String   @id @default(cuid())
+  studentId String
+  testId    String?
+  student   Student  @relation(fields: [studentId], references: [id])
+  date      DateTime
+  rank      Int
+  score     Float
+
+  @@index([studentId])
+  @@index([date])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  studentId String?
+  student   Student? @relation(fields: [studentId], references: [id])
+  title     String
+  body      String
+  type      String
+  isPopup   Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([studentId])
+  @@index([createdAt])
+}
+
+model AppSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WhatsAppDraft {
+  id          String      @id @default(cuid())
+  studentId   String
+  student     Student     @relation(fields: [studentId], references: [id])
+  body        String
+  cadence     String
+  status      DraftStatus @default(TEACHER_REVIEW)
+  provider    String?
+  sentAt      DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([studentId])
+  @@index([status])
+}
