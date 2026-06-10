@@ -1,147 +1,252 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, MessageSquareText, Users } from "lucide-react";
-import { AdminCommandBox } from "@/components/admin-command-box";
+import { AlertTriangle, ArrowRight, MessageSquareText, Users, CalendarDays, Award, Upload, ClipboardList, TrendingUp } from "lucide-react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { MetricCard } from "@/components/metric-card";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { getTeacherDashboard, getWhatsAppDrafts } from "@/lib/academy";
+import { getTeacherDashboard, getWhatsAppDrafts, getTeacherSchedule, getTeacherLeaderboard } from "@/lib/academy";
+import { prisma } from "@/lib/prisma";
 
 export default async function TeacherDashboardPage() {
-  const dashboard = await getTeacherDashboard("12th Batch 2026");
-  const drafts = await getWhatsAppDrafts("12th Batch 2026");
+  const batchName = "12th Batch 2026";
+  const dashboard = await getTeacherDashboard(batchName);
+  const drafts = await getWhatsAppDrafts(batchName);
+  const schedule = await getTeacherSchedule(batchName);
+  const leaderboard = await getTeacherLeaderboard("overall", batchName);
+
+  // Fetch actual uploaded tests using Prisma
+  const recentTests = await prisma.test.findMany({
+    orderBy: { date: "desc" },
+    take: 3
+  });
+
   const weakStudents = dashboard.priorityStudents;
+  const activeSchedule = schedule.filter(s => s.status === "UPCOMING" || s.status === "IN_PROGRESS").slice(0, 3);
 
   return (
-    <AppShell active="/teacher">
-      <PageHeader eyebrow="Teacher Portal" title="Academic command center">
-        <div className="flex flex-wrap gap-2">
-          <Link href="/teacher/upload-marks" className="inline-flex h-10 items-center justify-center rounded-lg bg-gold-400 px-4 text-sm font-semibold text-navy-950 transition hover:bg-gold-300">Upload marks</Link>
-          <Link href="/teacher/whatsapp" className="inline-flex h-10 items-center justify-center rounded-lg border border-gold-400/35 bg-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/15">Generate WhatsApp Draft</Link>
-          <Link href="/admin/students" className="inline-flex h-10 items-center justify-center rounded-lg border border-gold-400/35 bg-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/15">Search & Reports</Link>
-        </div>
-      </PageHeader>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Students tracked" value={`${dashboard.studentsTracked}`} detail="Filtered by batch" trend="flat" />
-        <MetricCard label="Batch average" value={`${dashboard.batchAverage}%`} detail="Latest batch performance" trend="up" />
-        <MetricCard label="Weak students" value={`${dashboard.weakStudentCount}`} detail="Below 65% average" trend="down" />
-        <MetricCard label="Review queue" value={`${dashboard.reviewQueue}`} detail="WhatsApp drafts pending" trend="flat" />
-      </div>
-
-      <div className="mt-4 grid gap-4 xl:grid-cols-[1.4fr_0.9fr]">
-        <Card>
-          <CardHeader className="flex-row items-center justify-between">
-            <div>
-              <CardTitle>Student overview</CardTitle>
-              <p className="text-sm text-navy-800/65">Fast list, no heavy chart load.</p>
-            </div>
-            <Users className="size-5 text-gold-600" />
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {dashboard.studentOverview.map((student) => (
-              <Link key={student.id} href="/student" className="grid gap-3 rounded-xl border border-gold-500/20 bg-ivory-50 p-3 transition hover:border-gold-500/60 md:grid-cols-[1fr_140px_120px_100px] md:items-center">
-                <div>
-                  <p className="font-semibold text-navy-950">{student.fullName}</p>
-                  <p className="text-sm text-navy-800/65">{student.batchType}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-navy-800/60">Main progress</p>
-                  <Progress value={student.mainProgress} className="mt-2" />
-                </div>
-                <Badge tone={(student.average ?? 0) >= 75 ? "green" : (student.average ?? 0) >= 65 ? "gold" : "red"}>{student.average ?? "N/A"}% avg</Badge>
-                <p className="text-sm text-navy-800">Rank #{student.rank}</p>
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="size-4 text-gold-600" />
-              Priority students
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {weakStudents.map((student) => (
-              <div key={student.id} className="rounded-xl border border-rose-400/20 bg-rose-400/8 p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-navy-950">{student.fullName}</p>
-                    <p className="mt-1 text-sm text-navy-800/75">{student.aiNote}</p>
-                  </div>
-                  <Badge tone="red">Catch-up</Badge>
-                </div>
-              </div>
-            ))}
-            <div className="rounded-xl border border-gold-400/25 bg-gold-400/10 p-3">
-              <p className="text-sm font-semibold text-gold-600">Upcoming quarterly alert</p>
-              <p className="mt-1 text-sm text-navy-800/75">Quarterly tests appear as profile popups 7 days and 1 day before test date.</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="mt-4 grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Syllabus progress</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {dashboard.roadmap.map((step, index) => (
-              <div key={index}>
-                <div className="mb-2 flex items-center justify-between text-sm">
-                  <span>{step.chapterName}</span>
-                  <span className="text-gold-600">{step.priority}</span>
-                </div>
-                <Progress value={Math.floor(100 / dashboard.roadmap.length)} />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex-row items-center justify-between">
-            <div>
-              <CardTitle>WhatsApp queue preview</CardTitle>
-              <p className="text-sm text-navy-800/65">Drafts are never sent without review.</p>
-            </div>
-            <MessageSquareText className="size-5 text-gold-600" />
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {drafts.map((draft) => (
-              <div key={draft.id} className="rounded-xl border border-gold-500/20 bg-ivory-50 p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-semibold text-navy-950">{draft.student}</p>
-                  <Badge tone="blue">{draft.status}</Badge>
-                </div>
-                <p className="mt-2 text-sm leading-6 text-navy-800/75">{draft.draft}</p>
-              </div>
-            ))}
-            <Link href="/teacher/whatsapp" className="inline-flex items-center gap-2 text-sm font-semibold text-gold-600">
-              Open queue <ArrowRight className="size-4" />
+    <AppShell active="/teacher" role="teacher">
+      <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto text-white">
+        
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gold-400/10 pb-4">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-gold-400">Teacher Portal</p>
+            <h1 className="text-2xl md:text-3xl font-bold font-serif text-white mt-1">Academic Dashboard</h1>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/teacher/upload-marks" className="inline-flex h-9 items-center justify-center rounded-lg bg-gold-400 px-4 text-xs font-bold text-navy-950 transition hover:bg-gold-300">
+              <Upload className="mr-1.5 size-3.5" /> Upload Marks
             </Link>
-          </CardContent>
-        </Card>
-      </div>
+            <Link href="/teacher/whatsapp" className="inline-flex h-9 items-center justify-center rounded-lg border border-gold-400/35 bg-white/5 px-4 text-xs font-bold text-white transition hover:bg-white/10">
+              WhatsApp Queue
+            </Link>
+          </div>
+        </div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>12th running roadmap</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {dashboard.roadmap.map((item, index) => (
-              <details key={item.chapterName} className="rounded-xl border border-gold-500/20 bg-ivory-50 p-3">
-                <summary className="cursor-pointer font-semibold text-navy-950">{item.chapterName}</summary>
-                <p className="mt-2 text-sm text-navy-800/75">Subject: {item.subject}</p>
-              </details>
-            ))}
+        {/* Workflow Metrics: Upload | Analyze | Review | Notify */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <MetricCard 
+            label="Students" 
+            value={`${dashboard.studentsTracked}`} 
+            detail="Active learners to review" 
+            trend="flat" 
+          />
+          <MetricCard 
+            label="Tests Uploaded" 
+            value={`${recentTests.length}`} 
+            detail="Recent uploads ready for review" 
+            trend="up" 
+          />
+          <MetricCard 
+            label="Pending AI Analysis" 
+            value={`${dashboard.weakStudentCount}`} 
+            detail="Students needing catch-up action" 
+            trend="down" 
+          />
+          <MetricCard 
+            label="WhatsApp Queue" 
+            value={`${dashboard.reviewQueue}`} 
+            detail="WhatsApp drafts pending review" 
+            trend="up" 
+          />
+        </div>
+
+        <Card className="bg-navy-900 border-gold-400/20 text-white">
+          <CardContent className="grid gap-3 p-4 sm:grid-cols-4">
+            {[
+              { label: "Upload", href: "/teacher/upload-marks", icon: Upload },
+              { label: "Analyze", href: "/teacher", icon: AlertTriangle },
+              { label: "Review", href: "/teacher/students", icon: ClipboardList },
+              { label: "Notify", href: "/teacher/whatsapp", icon: MessageSquareText }
+            ].map((step) => {
+              const Icon = step.icon;
+              return (
+                <Link
+                  key={step.label}
+                  href={step.href}
+                  className="flex items-center justify-between rounded-lg border border-gold-400/15 bg-navy-950 px-4 py-3 text-sm font-bold text-white transition hover:border-gold-400/35 hover:bg-white/5"
+                >
+                  <span>{step.label}</span>
+                  <Icon className="size-4 text-gold-400" />
+                </Link>
+              );
+            })}
           </CardContent>
         </Card>
-        <AdminCommandBox />
+
+        {/* Middle Row: Recent Uploads | AI Insights | Today's Schedule */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          
+          {/* Recent Uploads */}
+          <Card className="bg-navy-900 border-gold-400/20 text-white">
+            <CardHeader className="border-b border-gold-400/10 py-3 flex items-center justify-between flex-row">
+              <CardTitle className="text-xs uppercase tracking-wider text-white">Recent Uploaded Tests</CardTitle>
+              <Upload className="size-4 text-gold-400" />
+            </CardHeader>
+            <CardContent className="p-4 space-y-3">
+              {recentTests.length > 0 ? (
+                recentTests.map((test) => (
+                  <div key={test.id} className="p-3 rounded-lg bg-navy-950 border border-gold-400/10">
+                    <p className="font-bold text-xs text-white">{test.testName}</p>
+                    <p className="text-[10px] text-white/50 mt-0.5">
+                      {test.testType.replace("_", " ")} • {new Date(test.date).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-xs text-white/40 italic">
+                  No recently uploaded marks.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* AI Insights (Priority Students) */}
+          <Card className="bg-navy-900 border-gold-400/20 text-white">
+            <CardHeader className="border-b border-gold-400/10 py-3 flex items-center justify-between flex-row">
+              <CardTitle className="text-xs uppercase tracking-wider text-white">AI Insights / Catch-Up</CardTitle>
+              <AlertTriangle className="size-4 text-gold-400" />
+            </CardHeader>
+            <CardContent className="p-4 space-y-3 max-h-[260px] overflow-y-auto">
+              {weakStudents.length > 0 ? (
+                weakStudents.map((student) => (
+                  <div key={student.id} className="p-3 rounded-lg bg-navy-950 border border-rose-500/20 text-white">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-white">{student.fullName}</span>
+                      <Badge tone="red" className="text-[9px]">Catch-up</Badge>
+                    </div>
+                    <p className="text-[10px] text-white/70 mt-1 leading-relaxed">{student.aiNote || "Needs support in rotational dynamics CET mocks."}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-xs text-white/40 italic">
+                  All students are currently on track.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Today's Schedule */}
+          <Card className="bg-navy-900 border-gold-400/20 text-white">
+            <CardHeader className="border-b border-gold-400/10 py-3 flex items-center justify-between flex-row">
+              <CardTitle className="text-xs uppercase tracking-wider text-white">Academic Schedule</CardTitle>
+              <CalendarDays className="size-4 text-gold-400" />
+            </CardHeader>
+            <CardContent className="p-4 space-y-3">
+              {activeSchedule.length > 0 ? (
+                activeSchedule.map((item) => (
+                  <div key={item.id} className="p-3 rounded-lg bg-navy-950 border border-gold-400/10">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-gold-400">{item.testName}</span>
+                      <span className="text-[9px] text-emerald-400 uppercase font-bold">{item.testType.replace("_", " ")}</span>
+                    </div>
+                    <p className="text-[10px] text-white/60 mt-1">Syllabus: {item.chapters.join(", ")}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-xs text-white/40 italic">
+                  No upcoming schedule.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+        </div>
+
+        {/* Bottom Row: Leaderboard | WhatsApp Queue | Performance Trends */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          
+          {/* Leaderboard */}
+          <Card className="bg-navy-900 border-gold-400/20 text-white">
+            <CardHeader className="border-b border-gold-400/10 py-3 flex items-center justify-between flex-row">
+              <CardTitle className="text-xs uppercase tracking-wider text-white">Topper Leaderboard</CardTitle>
+              <Award className="size-4 text-gold-400" />
+            </CardHeader>
+            <CardContent className="p-4 space-y-3">
+              {leaderboard.slice(0, 3).map((student, index) => (
+                <div key={student.id} className="flex items-center justify-between p-2.5 rounded-lg bg-navy-950 border border-gold-400/10">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-gold-400">#{index + 1}</span>
+                    <span className="text-xs text-white font-semibold">{student.fullName}</span>
+                  </div>
+                  <Badge tone="gold" className="text-[10px]">{student.computedScore}%</Badge>
+                </div>
+              ))}
+              <Link href="/teacher/leaderboard" className="inline-flex items-center gap-1.5 text-xs text-gold-400 font-bold hover:text-gold-300 transition-colors mt-2">
+                Open Leaderboard <ArrowRight className="size-3.5" />
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* WhatsApp Queue */}
+          <Card className="bg-navy-900 border-gold-400/20 text-white">
+            <CardHeader className="border-b border-gold-400/10 py-3 flex items-center justify-between flex-row">
+              <CardTitle className="text-xs uppercase tracking-wider text-white">WhatsApp Queue Preview</CardTitle>
+              <MessageSquareText className="size-4 text-gold-400" />
+            </CardHeader>
+            <CardContent className="p-4 space-y-3">
+              {drafts.slice(0, 2).map((draft) => (
+                <div key={draft.id} className="p-3 rounded-lg bg-navy-950 border border-gold-400/10">
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="font-bold text-white">{draft.student}</span>
+                    <span className="text-gold-400 font-semibold">{draft.cadence}</span>
+                  </div>
+                  <p className="text-[10px] text-white/70 mt-1.5 line-clamp-2 leading-relaxed">{draft.draft}</p>
+                </div>
+              ))}
+              <Link href="/teacher/whatsapp" className="inline-flex items-center gap-1.5 text-xs text-gold-400 font-bold hover:text-gold-300 transition-colors mt-2">
+                Review WhatsApp queue <ArrowRight className="size-3.5" />
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Performance Trends */}
+          <Card className="bg-navy-900 border-gold-400/20 text-white">
+            <CardHeader className="border-b border-gold-400/10 py-3 flex items-center justify-between flex-row">
+              <CardTitle className="text-xs uppercase tracking-wider text-white">Batch Performance Averages</CardTitle>
+              <TrendingUp className="size-4 text-gold-400" />
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <div>
+                <div className="flex justify-between items-center text-xs mb-1">
+                  <span className="text-white/75">12th Science average score</span>
+                  <span className="text-gold-400 font-bold">{dashboard.batchAverage}%</span>
+                </div>
+                <Progress value={dashboard.batchAverage} />
+              </div>
+              
+              <div className="p-3 rounded-lg bg-navy-950 border border-gold-400/10 space-y-1">
+                <p className="text-[10px] font-bold text-gold-400 uppercase">Director Mentorship Note</p>
+                <p className="text-[10px] text-white/70 leading-relaxed">
+                  Batches are progressing on Differentiation & Rotational Dynamics. Focus weekly tests on derivation questions.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+        </div>
+
       </div>
     </AppShell>
   );

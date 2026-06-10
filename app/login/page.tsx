@@ -1,80 +1,170 @@
-import Link from "next/link";
-import Image from "next/image";
-import { ArrowRight, LockKeyhole, ShieldCheck } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+"use client";
+
+import { useState } from "react";
+import { LockKeyhole, ShieldCheck, ChevronRight, Loader2, BookOpen, Target, Users } from "lucide-react";
 import { RomanWordmark } from "@/components/roman-wordmark";
 
 export default function LoginPage() {
+  const [role, setRole] = useState<"student" | "teacher">("student");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    // Simulate real credential verification and redirect using demo auth routes
+    setTimeout(() => {
+      window.location.href = `/api/auth/demo?role=${role}`;
+    }, 800);
+  };
+
   return (
-    <main className="relative grid min-h-screen place-items-center p-4">
-      <section className="w-full max-w-6xl overflow-hidden rounded-[1.25rem] border border-gold-500/45 bg-ivory-50 shadow-elite">
-        <div className="grid md:grid-cols-[1.05fr_0.95fr]">
-          <div className="cover-panel relative min-h-[680px] p-6 md:p-10">
-            <div className="absolute inset-x-8 bottom-8 h-16 border-b border-l border-gold-400/70" />
-            <RomanWordmark className="mx-auto mt-8" />
-            <div className="mx-auto mt-9 max-w-xl text-center">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white">
-                Personal tuition <span className="text-gold-300">|</span> Concept focused <span className="text-gold-300">|</span> Result driven
+    <main className="min-h-screen w-full flex items-center justify-center p-4 md:p-8 bg-navy-950 font-sans">
+      <div className="w-full max-w-5xl bg-navy-900 border border-gold-400/20 rounded-[22px] overflow-hidden shadow-elite grid md:grid-cols-[55fr_45fr] min-h-[600px]">
+        
+        {/* Left Side: Brochure-first Brand Panel (Desktop only) */}
+        <div className="hidden md:flex w-full h-full flex-col justify-between bg-navy-950 border-r border-gold-400/15 p-10 text-white">
+          <div className="space-y-6">
+            <RomanWordmark className="items-start" />
+            <div className="space-y-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-gold-400">Personal tuition | Concept focused | Result driven</p>
+              <h2 className="max-w-md text-3xl font-bold font-serif leading-tight">
+                For students aiming beyond limits.
+              </h2>
+              <p className="max-w-md text-sm leading-6 text-white/65">
+                Science PCM/PCB, Commerce, CET, and NEET Foundation coaching with small batches, concept clarity, smart practice, and exam-focused preparation.
               </p>
-              <p className="mt-5 font-serif text-2xl italic text-gold-300">Your Success, Our Mission.</p>
             </div>
-            <div className="mt-10 grid gap-3 sm:grid-cols-3">
-              {["Strong concepts", "Smart practice", "Top results"].map((item) => (
-                <div key={item} className="rounded-xl border border-gold-400/25 bg-white/8 p-3 text-center text-sm font-semibold uppercase tracking-wide text-white">
-                  {item}
-                </div>
-              ))}
-            </div>
-            <div className="absolute bottom-0 right-0 hidden h-full w-24 skew-x-[-14deg] border-l border-gold-400/70 bg-ivory-50 md:block" />
           </div>
-          <div className="bg-ivory-50 p-5 md:p-8">
-            <div className="relative mb-5 overflow-hidden rounded-academy border border-gold-500/35 bg-white shadow-elite">
-              <Image
-                src="/roman-academy-cover.png"
-                alt="Roman Academy cover poster"
-                width={1080}
-                height={1350}
-                priority
-                className="h-auto w-full"
-              />
-            </div>
-            <Card>
-            <CardContent className="space-y-4 p-5">
-              <Link href="/api/auth/demo?role=student" className="block rounded-xl border border-gold-500/25 bg-ivory-50 p-4 transition hover:border-gold-500/60">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <LockKeyhole className="size-5 text-gold-600" />
-                    <div>
-                      <p className="font-semibold text-navy-950">Student login</p>
-                      <p className="text-sm text-navy-800/70">Name-based username and generated password</p>
-                    </div>
-                  </div>
-                  <ArrowRight className="size-4 text-navy-800" />
-                </div>
-              </Link>
-              <Link href="/api/auth/demo?role=teacher" className="block rounded-xl border border-gold-400/30 bg-gold-400/10 p-4 transition hover:bg-gold-400/15">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <ShieldCheck className="size-5 text-gold-600" />
-                    <div>
-                      <p className="font-semibold text-navy-950">Teacher access</p>
-                      <p className="text-sm text-navy-800/70">Admin dashboard, marks, syllabus and review queue</p>
-                    </div>
-                  </div>
-                  <ArrowRight className="size-4 text-navy-800" />
-                </div>
-              </Link>
-              <div className="rounded-xl border border-gold-500/20 bg-ivory-100 p-4 text-sm leading-6 text-navy-800/75">
-                First student login launches a guided walkthrough. Teacher routes use a separate admin path and confirmation previews before saving data.
+
+          <div className="grid gap-4">
+            <div className="rounded-xl border border-gold-400/20 bg-navy-900 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold uppercase tracking-wider text-white/60">Courses</p>
+                <BookOpen className="size-4 text-gold-400" />
               </div>
-              <Link href="/api/auth/demo?role=teacher" className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-gold-400 px-4 text-sm font-semibold text-navy-950 transition hover:bg-gold-300">
-                Continue with demo access
-              </Link>
-            </CardContent>
-          </Card>
+              <p className="mt-3 text-xl font-bold text-white">Science | Commerce | NEET</p>
+              <p className="mt-1 text-xs text-white/60">11th | 12th | CET preparation</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-xl border border-gold-400/20 bg-navy-900 p-4">
+                <Target className="size-4 text-gold-400" />
+                <p className="mt-3 text-base font-bold text-white">Smart Practice</p>
+                <p className="text-xs text-white/60">Regular tests and tracking</p>
+              </div>
+              <div className="rounded-xl border border-gold-400/20 bg-navy-900 p-4">
+                <Users className="size-4 text-gold-400" />
+                <p className="mt-3 text-base font-bold text-white">Personal Attention</p>
+                <p className="text-xs text-white/60">Small batches for focus</p>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
+
+        {/* Right Side: Interactive Login Form */}
+        <div className="flex flex-col justify-center p-6 md:p-10 bg-navy-900 text-white space-y-6">
+          <div className="text-center space-y-2">
+            <RomanWordmark compact className="mx-auto" />
+            <h1 className="text-xl font-bold tracking-tight text-white mt-4">Academy Portal</h1>
+            <p className="text-xs text-white/60">Enter your credentials to access your dashboard</p>
+          </div>
+
+          {/* Role Toggle Tabs */}
+          <div className="grid grid-cols-2 p-1 bg-navy-950 rounded-xl border border-gold-400/10">
+            <button
+              type="button"
+              onClick={() => {
+                setRole("student");
+                setEmail("kunal.datkhile@romanacademy.in");
+              }}
+              className={`flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${
+                role === "student"
+                  ? "bg-gold-400 text-navy-950"
+                  : "text-white/70 hover:text-white"
+              }`}
+            >
+              <LockKeyhole className="size-3.5" />
+              Student
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setRole("teacher");
+                setEmail("abhijeet.roman@romanacademy.in");
+              }}
+              className={`flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${
+                role === "teacher"
+                  ? "bg-gold-400 text-navy-950"
+                  : "text-white/70 hover:text-white"
+              }`}
+            >
+              <ShieldCheck className="size-3.5" />
+              Teacher
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1">
+              <label htmlFor="email" className="text-xs font-bold text-gold-400 uppercase tracking-wider block">
+                Email or Username
+              </label>
+              <input
+                id="email"
+                type="text"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={role === "student" ? "kunal.datkhile@romanacademy.in" : "abhijeet.roman@romanacademy.in"}
+                className="w-full h-11 px-4 rounded-lg bg-navy-950 border border-gold-400/20 text-white placeholder-white/30 focus:ring-1 focus:ring-gold-400 focus:outline-none text-sm transition-all"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="password" className="text-xs font-bold text-gold-400 uppercase tracking-wider block">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full h-11 px-4 rounded-lg bg-navy-950 border border-gold-400/20 text-white placeholder-white/30 focus:ring-1 focus:ring-gold-400 focus:outline-none text-sm transition-all"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-11 flex items-center justify-center gap-2 rounded-lg bg-gold-400 text-navy-950 font-bold hover:bg-gold-300 transition-colors text-sm disabled:opacity-80"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  Access Dashboard
+                  <ChevronRight className="size-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="rounded-xl border border-gold-400/15 bg-navy-950 p-4 text-[11px] leading-relaxed text-white/60">
+            {role === "student" ? (
+              <span>First login launches a brief guided walkthrough. Returning logins skip the walkthrough directly to stats.</span>
+            ) : (
+              <span>Teacher accounts provide syllabus configuration, marks uploads, and automated WhatsApp queue checks.</span>
+            )}
+          </div>
+        </div>
+
+      </div>
     </main>
   );
 }

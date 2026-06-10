@@ -1,7 +1,7 @@
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ProfileChart } from "@/components/profile-chart";
+import { ProfileChartClient as ProfileChart } from "@/components/profile-chart-client";
 import { getStudentProgress } from "@/lib/academy";
 import { LineChart } from "lucide-react";
 

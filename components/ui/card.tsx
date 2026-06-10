@@ -12,7 +12,7 @@ export function CardHeader({ className, ...props }: CardProps) {
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn("text-base font-semibold text-navy-950", className)} {...props} />;
+  return <h3 className={cn("text-base font-semibold text-ivory-100", className)} {...props} />;
 }
 
 export function CardContent({ className, ...props }: CardProps) {

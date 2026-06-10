@@ -24,7 +24,7 @@ function EmptyChart({ title }: { title: string }) {
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid h-56 place-items-center rounded-xl border border-gold-500/20 bg-ivory-50 text-sm text-navy-800/60">
+        <div className="grid h-56 place-items-center rounded-xl border border-gold-500/20 bg-navy-900/50 text-sm text-ivory-100/60">
           Upload marks to generate this graph.
         </div>
       </CardContent>
@@ -60,12 +60,12 @@ export function PerformanceGraphs({
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={weekly}>
-                <CartesianGrid stroke="rgba(6,21,43,0.1)" vertical={false} />
-                <XAxis dataKey="date" tick={{ fill: "#0d2a50", fontSize: 12 }} />
-                <YAxis domain={[0, 100]} tick={{ fill: "#0d2a50", fontSize: 12 }} />
+                <CartesianGrid stroke="rgba(244,239,229,0.1)" vertical={false} />
+                <XAxis dataKey="date" tick={{ fill: "#f4efe5", fontSize: 12 }} />
+                <YAxis domain={[0, 100]} tick={{ fill: "#f4efe5", fontSize: 12 }} />
                 <Tooltip contentStyle={tooltip} />
                 <Line type="monotone" dataKey="score" stroke="#ca911f" strokeWidth={3} />
-                <Line type="monotone" dataKey="movingAverage" stroke="#0d2a50" strokeWidth={2} />
+                <Line type="monotone" dataKey="movingAverage" stroke="#d6a22c" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -78,12 +78,12 @@ export function PerformanceGraphs({
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={monthly}>
-                <CartesianGrid stroke="rgba(6,21,43,0.1)" vertical={false} />
-                <XAxis dataKey="date" tick={{ fill: "#0d2a50", fontSize: 12 }} />
-                <YAxis tick={{ fill: "#0d2a50", fontSize: 12 }} />
+                <CartesianGrid stroke="rgba(244,239,229,0.1)" vertical={false} />
+                <XAxis dataKey="date" tick={{ fill: "#f4efe5", fontSize: 12 }} />
+                <YAxis tick={{ fill: "#f4efe5", fontSize: 12 }} />
                 <Tooltip contentStyle={tooltip} />
                 <Area type="monotone" dataKey="score" stroke="#ca911f" fill="#d6a22c55" />
-                <Line type="monotone" dataKey="rank" stroke="#0d2a50" strokeWidth={2} />
+                <Line type="monotone" dataKey="rank" stroke="#d6a22c" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -96,9 +96,9 @@ export function PerformanceGraphs({
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={subjects}>
-                <CartesianGrid stroke="rgba(6,21,43,0.1)" vertical={false} />
-                <XAxis dataKey="subject" tick={{ fill: "#0d2a50", fontSize: 12 }} />
-                <YAxis domain={[0, 100]} tick={{ fill: "#0d2a50", fontSize: 12 }} />
+                <CartesianGrid stroke="rgba(244,239,229,0.1)" vertical={false} />
+                <XAxis dataKey="subject" tick={{ fill: "#f4efe5", fontSize: 12 }} />
+                <YAxis domain={[0, 100]} tick={{ fill: "#f4efe5", fontSize: 12 }} />
                 <Tooltip contentStyle={tooltip} />
                 <Bar dataKey="score" fill="#ca911f" radius={[6, 6, 0, 0]} />
               </BarChart>
@@ -113,11 +113,11 @@ export function PerformanceGraphs({
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={readiness}>
-                <CartesianGrid stroke="rgba(6,21,43,0.1)" vertical={false} />
-                <XAxis dataKey="date" tick={{ fill: "#0d2a50", fontSize: 12 }} />
-                <YAxis domain={[0, 100]} tick={{ fill: "#0d2a50", fontSize: 12 }} />
+                <CartesianGrid stroke="rgba(244,239,229,0.1)" vertical={false} />
+                <XAxis dataKey="date" tick={{ fill: "#f4efe5", fontSize: 12 }} />
+                <YAxis domain={[0, 100]} tick={{ fill: "#f4efe5", fontSize: 12 }} />
                 <Tooltip contentStyle={tooltip} />
-                <Area type="monotone" dataKey="readiness" stroke="#0d2a50" fill="#0d2a5050" />
+                <Area type="monotone" dataKey="readiness" stroke="#d6a22c" fill="#d6a22c50" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -130,9 +130,9 @@ export function PerformanceGraphs({
           <CardContent className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={movement}>
-                <CartesianGrid stroke="rgba(6,21,43,0.1)" vertical={false} />
-                <XAxis dataKey="date" tick={{ fill: "#0d2a50", fontSize: 12 }} />
-                <YAxis tick={{ fill: "#0d2a50", fontSize: 12 }} />
+                <CartesianGrid stroke="rgba(244,239,229,0.1)" vertical={false} />
+                <XAxis dataKey="date" tick={{ fill: "#f4efe5", fontSize: 12 }} />
+                <YAxis tick={{ fill: "#f4efe5", fontSize: 12 }} />
                 <Tooltip contentStyle={tooltip} />
                 <Bar dataKey="movement" fill="#d6a22c" radius={[6, 6, 0, 0]} />
               </BarChart>

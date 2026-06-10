@@ -169,8 +169,6 @@ class OpenAiCompatibleProvider implements AiProvider {
 function providers(): AiProvider[] {
   return [
     new GeminiProvider(),
-    new OpenAiCompatibleProvider("openai", "OpenAI", env("OPENAI_API_KEY", "openai_api_key"), env("OPENAI_MODEL") || "gpt-4.1-mini", "https://api.openai.com/v1/chat/completions"),
-    new OpenAiCompatibleProvider("other-openai", "Other OpenAI", env("OTHER_OPENAI_API_KEY"), env("OTHER_OPENAI_MODEL") || "gpt-4.1-mini", "https://api.openai.com/v1/chat/completions"),
     new OpenAiCompatibleProvider("groq", "Groq", env("GROQ_API_KEY", "GROK_API_KEY"), env("GROQ_MODEL", "GROK_MODEL") || "llama-3.1-8b-instant", "https://api.groq.com/openai/v1/chat/completions")
   ];
 }

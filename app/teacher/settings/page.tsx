@@ -82,7 +82,7 @@ export default function SettingsPage() {
 
   const handleReset = () => {
     setSettings({
-      primaryProvider: "openai",
+      primaryProvider: "gemini",
       fallbackProvider: "grok",
       whatsappNumber: "9172765002",
       notificationPreferences: {
@@ -135,12 +135,11 @@ export default function SettingsPage() {
                   <span>Primary Provider</span>
                   <select
                     className="h-10 w-full rounded-lg border border-gold-500/25 bg-ivory-50 px-3 text-navy-950 outline-none focus:ring-2 focus:ring-gold-400/40"
-                    value={settings?.primaryProvider ?? "openai"}
+                    value={settings?.primaryProvider ?? "gemini"}
                     onChange={(event) => setSettings((current) => current ? { ...current, primaryProvider: event.target.value } : current)}
                   >
-                    <option value="openai">OpenAI</option>
-                    <option value="grok">Grok/Groq</option>
-                    <option value="gemini">Gemini</option>
+                    <option value="gemini">Gemini (Primary)</option>
+                    <option value="grok">Groq/Llama (Fallback)</option>
                   </select>
                 </label>
                 <label className="space-y-2 text-sm text-navy-800">
@@ -150,9 +149,8 @@ export default function SettingsPage() {
                     value={settings?.fallbackProvider ?? "grok"}
                     onChange={(event) => setSettings((current) => current ? { ...current, fallbackProvider: event.target.value } : current)}
                   >
-                    <option value="grok">Grok/Groq</option>
+                    <option value="grok">Groq/Llama</option>
                     <option value="gemini">Gemini</option>
-                    <option value="openai">OpenAI</option>
                   </select>
                 </label>
               </div>

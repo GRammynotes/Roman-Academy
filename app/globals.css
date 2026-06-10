@@ -16,30 +16,10 @@ html {
 
 body {
   margin: 0;
-  background: #f4efe5;
-  color: #07152a;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(116deg, rgba(3, 15, 32, 0.98) 0%, rgba(3, 20, 42, 0.96) 42%, transparent 42.2%),
-    linear-gradient(90deg, rgba(214, 162, 44, 0.2), transparent 28%, rgba(214, 162, 44, 0.16) 72%, transparent),
-    radial-gradient(circle at 82% 14%, rgba(255, 255, 255, 0.78), transparent 30%),
-    linear-gradient(180deg, rgba(244, 239, 229, 0.94), rgba(244, 239, 229, 0.9));
-  opacity: 1;
-}
-
-body::after {
-  content: "";
-  position: fixed;
-  inset: 16px;
-  pointer-events: none;
-  border: 1px solid rgba(202, 145, 31, 0.58);
-  z-index: 0;
+  background: #021B3A;
+  color: #F8F6F0;
+  position: relative;
+  z-index: 1;
 }
 
 button,
@@ -51,25 +31,10 @@ textarea {
 
 @layer utilities {
   .glass-panel {
-    @apply relative overflow-hidden border shadow-elite backdrop-blur;
-    border-color: rgba(202, 145, 31, 0.23);
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(247, 241, 230, 0.74)),
-      linear-gradient(135deg, rgba(6, 22, 44, 0.1), transparent);
-    color: #07152a;
-  }
-
-  .glass-panel::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    border-radius: inherit;
-    border: 1px solid transparent;
-    background: linear-gradient(135deg, rgba(214, 162, 44, 0.72), rgba(255, 255, 255, 0.05), rgba(6, 22, 44, 0.35)) border-box;
-    mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    opacity: 0.55;
+    @apply relative overflow-hidden border shadow-elite;
+    border-color: rgba(212, 175, 55, 0.2);
+    background-color: #0A274F;
+    color: #F8F6F0;
   }
 
   .gold-line {

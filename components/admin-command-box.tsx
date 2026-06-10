@@ -23,13 +23,13 @@ export function AdminCommandBox() {
         <textarea
           value={command}
           onChange={(event) => setCommand(event.target.value)}
-          className="min-h-24 w-full resize-none rounded-xl border border-gold-500/25 bg-ivory-50 p-3 text-sm text-navy-950 outline-none ring-gold-400/40 focus:ring-2"
+          className="min-h-24 w-full resize-none rounded-xl border border-gold-500/25 bg-navy-900 p-3 text-sm text-ivory-100 outline-none ring-gold-400/40 focus:ring-2"
         />
-        <div className="grid gap-3 rounded-xl border border-gold-500/20 bg-ivory-100 p-3 text-sm md:grid-cols-2">
-          <p><span className="text-navy-800/60">Student:</span> {parsed.studentName}</p>
-          <p><span className="text-navy-800/60">Test:</span> {parsed.testName}</p>
-          <p><span className="text-navy-800/60">Score:</span> {parsed.percentage ?? "Needs entry"}%</p>
-          <p><span className="text-navy-800/60">WhatsApp:</span> {parsed.createWhatsappDraft ? "Draft required" : "Not requested"}</p>
+        <div className="grid gap-3 rounded-xl border border-gold-500/20 bg-navy-900/80 p-3 text-sm md:grid-cols-2">
+          <p><span className="text-ivory-100/50">Student:</span> {parsed.studentName}</p>
+          <p><span className="text-ivory-100/50">Test:</span> {parsed.testName}</p>
+          <p><span className="text-ivory-100/50">Score:</span> {parsed.percentage ?? "Needs entry"}%</p>
+          <p><span className="text-ivory-100/50">WhatsApp:</span> {parsed.createWhatsappDraft ? "Draft required" : "Not requested"}</p>
           <div className="md:col-span-2 flex flex-wrap gap-2">
             {parsed.weakChapters.map((chapter) => <Badge key={chapter} tone="red">{chapter}</Badge>)}
           </div>
