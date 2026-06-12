@@ -20,73 +20,68 @@ Rotational Dynamics
 Weak:
 Electrostatics`;
 
+function parseTextToPreview(text: string) {
+  try {
+    const lines = text.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) {
+      return null;
+    }
+    
+    const testName = lines[0];
+    const payloadLines = lines.slice(1);
+    
+    let currentSection: "students" | "completed" | "weak" = "students";
+    const students: string[] = [];
+    const completed: string[] = [];
+    const weak: string[] = [];
+    
+    for (const line of payloadLines) {
+      const lower = line.toLowerCase();
+      if (lower.startsWith("completed:")) {
+        currentSection = "completed";
+        const rest = line.slice(line.indexOf(":") + 1).trim();
+        if (rest) completed.push(rest);
+        continue;
+      }
+      if (lower.startsWith("weak:")) {
+        currentSection = "weak";
+        const rest = line.slice(line.indexOf(":") + 1).trim();
+        if (rest) weak.push(rest);
+        continue;
+      }
+      
+      if (currentSection === "students") {
+        const match = line.match(/^(.+?)\s+(\d{1,3})$/);
+        if (match) students.push(match[1].trim());
+      } else if (currentSection === "completed") {
+        completed.push(line);
+      } else if (currentSection === "weak") {
+        weak.push(line);
+      }
+    }
+    
+    return {
+      testName,
+      students: students.join(", "),
+      completed: completed.join(", "),
+      weak: weak.join(", ")
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default function UploadMarksPage() {
   const [uploadText, setUploadText] = useState(promptExample);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [parsedPreview, setParsedPreview] = useState<any>(null);
+  const [parsedPreview, setParsedPreview] = useState<any>(() => parseTextToPreview(promptExample));
 
-  // Quick client side preview parsing matching academy.ts rules
   const handleTextChange = (text: string) => {
     setUploadText(text);
-    
-    // Parse on change to update structured preview
-    try {
-      const lines = text.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-      if (lines.length < 2) {
-        setParsedPreview(null);
-        return;
-      }
-      
-      const testName = lines[0];
-      const payloadLines = lines.slice(1);
-      
-      let currentSection: "students" | "completed" | "weak" = "students";
-      const students: string[] = [];
-      const completed: string[] = [];
-      const weak: string[] = [];
-      
-      for (const line of payloadLines) {
-        const lower = line.toLowerCase();
-        if (lower.startsWith("completed:")) {
-          currentSection = "completed";
-          const rest = line.slice(line.indexOf(":") + 1).trim();
-          if (rest) completed.push(rest);
-          continue;
-        }
-        if (lower.startsWith("weak:")) {
-          currentSection = "weak";
-          const rest = line.slice(line.indexOf(":") + 1).trim();
-          if (rest) weak.push(rest);
-          continue;
-        }
-        
-        if (currentSection === "students") {
-          const match = line.match(/^(.+?)\s+(\d{1,3})$/);
-          if (match) students.push(match[1].trim());
-        } else if (currentSection === "completed") {
-          completed.push(line);
-        } else if (currentSection === "weak") {
-          weak.push(line);
-        }
-      }
-      
-      setParsedPreview({
-        testName,
-        students: students.join(", "),
-        completed: completed.join(", "),
-        weak: weak.join(", ")
-      });
-    } catch {
-      setParsedPreview(null);
-    }
+    setParsedPreview(parseTextToPreview(text));
   };
-
-  // Initialize preview on first load
-  useState(() => {
-    handleTextChange(promptExample);
-  });
 
   const handleSaveAndSync = async () => {
     setLoading(true);

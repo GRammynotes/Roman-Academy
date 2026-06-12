@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   title: "Roman Academy Dashboard",
@@ -8,8 +9,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen font-sans antialiased">{children}</body>
+    <html lang="en">
+      <body className="min-h-screen font-sans antialiased">
+        <ThemeProvider>
+          <div className="flex flex-col min-h-screen">
+            <main className="flex-1">{children}</main>
+          </div>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
