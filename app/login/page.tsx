@@ -1,80 +1,158 @@
-import Link from "next/link";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, AlertCircle, Loader2, LogIn } from "lucide-react";
 import Image from "next/image";
-import { ArrowRight, LockKeyhole, ShieldCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { RomanWordmark } from "@/components/roman-wordmark";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent, demoUsername?: string, demoPassword?: string) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    const loginUsername = demoUsername || username;
+    const loginPassword = demoPassword || password;
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: loginUsername, password: loginPassword })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || "Invalid credentials");
+        setLoading(false);
+        return;
+      }
+
+      document.cookie = `ra_role=${data.role}; path=/; SameSite=Strict`;
+      const redirectUrl = data.role === "teacher" ? "/teacher" : "/student";
+      router.push(redirectUrl);
+    } catch (err) {
+      setError("Connection error");
+      setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = (e: React.FormEvent) => {
+    handleLogin(e, "kunal.datkhile.11.2026", "student@123");
+  };
+
   return (
-    <main className="relative grid min-h-screen place-items-center p-4">
-      <section className="w-full max-w-6xl overflow-hidden rounded-[1.25rem] border border-gold-500/45 bg-ivory-50 shadow-elite">
-        <div className="grid md:grid-cols-[1.05fr_0.95fr]">
-          <div className="cover-panel relative min-h-[680px] p-6 md:p-10">
-            <div className="absolute inset-x-8 bottom-8 h-16 border-b border-l border-gold-400/70" />
-            <RomanWordmark className="mx-auto mt-8" />
-            <div className="mx-auto mt-9 max-w-xl text-center">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white">
-                Personal tuition <span className="text-gold-300">|</span> Concept focused <span className="text-gold-300">|</span> Result driven
-              </p>
-              <p className="mt-5 font-serif text-2xl italic text-gold-300">Your Success, Our Mission.</p>
+    <main className="min-h-screen bg-ivory-50 p-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <RomanWordmark className="mx-auto mb-4" />
+          <p className="text-sm font-semibold uppercase tracking-[0.15em] text-navy-950">
+            Personal tuition | Concept focused | Result driven
+          </p>
+        </div>
+
+        {/* Two Column: Image Left + Form Right */}
+        <div className="grid lg:grid-cols-[1.5fr_1fr] gap-6 items-start">
+          {/* LEFT: Results Image */}
+          <div className="relative rounded-xl border-2 border-gold-500/40 shadow-lg overflow-hidden bg-white">
+            <Image
+              src="/roman-academy-cover.webp"
+              alt="Results Brochure"
+              width={400}
+              height={500}
+              className="w-full h-auto"
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-navy-950 to-transparent p-4 text-center">
+              <p className="text-gold-300 italic font-serif text-sm">शिक्षा ही शक्ति है</p>
+              <p className="text-white text-xs mt-1">Education is Power</p>
             </div>
-            <div className="mt-10 grid gap-3 sm:grid-cols-3">
-              {["Strong concepts", "Smart practice", "Top results"].map((item) => (
-                <div key={item} className="rounded-xl border border-gold-400/25 bg-white/8 p-3 text-center text-sm font-semibold uppercase tracking-wide text-white">
-                  {item}
-                </div>
-              ))}
-            </div>
-            <div className="absolute bottom-0 right-0 hidden h-full w-24 skew-x-[-14deg] border-l border-gold-400/70 bg-ivory-50 md:block" />
           </div>
-          <div className="bg-ivory-50 p-5 md:p-8">
-            <div className="relative mb-5 overflow-hidden rounded-academy border border-gold-500/35 bg-white shadow-elite">
-              <Image
-                src="/roman-academy-cover.png"
-                alt="Roman Academy cover poster"
-                width={1080}
-                height={1350}
-                priority
-                className="h-auto w-full"
-              />
-            </div>
-            <Card>
-            <CardContent className="space-y-4 p-5">
-              <Link href="/api/auth/demo?role=student" className="block rounded-xl border border-gold-500/25 bg-ivory-50 p-4 transition hover:border-gold-500/60">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <LockKeyhole className="size-5 text-gold-600" />
-                    <div>
-                      <p className="font-semibold text-navy-950">Student login</p>
-                      <p className="text-sm text-navy-800/70">Name-based username and generated password</p>
-                    </div>
-                  </div>
-                  <ArrowRight className="size-4 text-navy-800" />
-                </div>
-              </Link>
-              <Link href="/api/auth/demo?role=teacher" className="block rounded-xl border border-gold-400/30 bg-gold-400/10 p-4 transition hover:bg-gold-400/15">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <ShieldCheck className="size-5 text-gold-600" />
-                    <div>
-                      <p className="font-semibold text-navy-950">Teacher access</p>
-                      <p className="text-sm text-navy-800/70">Admin dashboard, marks, syllabus and review queue</p>
-                    </div>
-                  </div>
-                  <ArrowRight className="size-4 text-navy-800" />
-                </div>
-              </Link>
-              <div className="rounded-xl border border-gold-500/20 bg-ivory-100 p-4 text-sm leading-6 text-navy-800/75">
-                First student login launches a guided walkthrough. Teacher routes use a separate admin path and confirmation previews before saving data.
+
+          {/* RIGHT: Login Form */}
+          <Card className="shadow-lg">
+            <CardContent className="p-6 space-y-5">
+              <div>
+                <h1 className="text-2xl font-bold text-navy-950">Welcome</h1>
+                <p className="text-sm text-navy-800/60 mt-1">Login to your account</p>
               </div>
-              <Link href="/api/auth/demo?role=teacher" className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-gold-400 px-4 text-sm font-semibold text-navy-950 transition hover:bg-gold-300">
-                Continue with demo access
-              </Link>
+
+              <form onSubmit={(e) => handleLogin(e)} className="space-y-3">
+                <div>
+                  <label className="block text-sm font-semibold text-navy-950 mb-1">Username</label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="kunal.datkhile.11.2026"
+                    className="w-full px-3 py-2 rounded-lg border border-gold-500/25 focus:ring-2 focus:ring-gold-400 focus:outline-none"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-navy-950 mb-1">Password</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password"
+                    className="w-full px-3 py-2 rounded-lg border border-gold-500/25 focus:ring-2 focus:ring-gold-400 focus:outline-none"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                {error && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-red-100 border border-red-300 text-red-700 text-sm">
+                    <AlertCircle className="size-4" />
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-2 bg-gold-500 text-navy-950 font-semibold rounded-lg hover:bg-gold-400 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {loading ? <Loader2 className="size-4 animate-spin" /> : <>Login <ArrowRight className="size-4" /></>}
+                </button>
+              </form>
+
+              {/* Demo Button */}
+              <button
+                onClick={handleDemoLogin}
+                disabled={loading}
+                className="w-full py-2 border-2 border-gold-500 text-navy-950 font-semibold rounded-lg hover:bg-gold-50 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <LogIn className="size-4" />
+                Demo: Kunal Datkhile
+              </button>
+
+              {/* Info */}
+              <div className="text-xs text-navy-800 bg-gold-50 p-3 rounded-lg">
+                <p className="font-semibold">Other accounts:</p>
+                <p className="mt-1">Teacher: roman_sir / Roman@123</p>
+                <p>Student: rujula.khamkar.12.2026 / student@123</p>
+              </div>
             </CardContent>
           </Card>
-          </div>
         </div>
-      </section>
+
+        {/* Mobile Stack Info */}
+        <div className="lg:hidden mt-6 text-center text-xs text-navy-800">
+          <p>📱 Scroll down to see login form on mobile</p>
+        </div>
+      </div>
     </main>
   );
 }

@@ -1,179 +1,148 @@
-import { AppShell, PageHeader } from "@/components/app-shell";
-import { StudentProfileCard } from "@/components/student-profile-card";
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ProfileChart } from "@/components/profile-chart";
-import { getStudentNotifications, getStudentProfile } from "@/lib/academy";
-import { Bell, ArrowUpRight, ShieldCheck, Flame, BookOpen } from "lucide-react";
+import { Bell, ArrowUpRight, BookOpen, Flame, ShieldCheck } from "lucide-react";
 
-export default async function StudentDashboard() {
-  const student = await getStudentProfile();
-  const notifications = await getStudentNotifications(student?.id);
-  const progressTrend = student?.progressTrend ?? [];
+export default function StudentPage() {
+  const [notifications] = useState([
+    { id: 1, title: "Test Results", body: "Weekly Physics Quiz results available", date: "Today" },
+    { id: 2, title: "Syllabus Update", body: "Chapter 5 marked complete", date: "Yesterday" }
+  ]);
 
-  const unreadAlertsCount = notifications.length;
+  const student = {
+    name: "Kunal Datkhile",
+    rank: 5,
+    batch: "11th Science",
+    average: 85,
+    nextTest: "Physics Quiz - Tomorrow"
+  };
 
   return (
-    <AppShell active="/student" role="student">
-      <div className="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
-        <PageHeader eyebrow="Student Portal" title="Dashboard">
-          <Badge tone="gold">Live Tracker</Badge>
-          {unreadAlertsCount > 0 && (
-            <Badge tone="red" className="animate-bounce font-bold">
-              {unreadAlertsCount} New Alerts
-            </Badge>
-          )}
-        </PageHeader>
-
-        {/* Live Academic Timeline / Alert Banner */}
-        {unreadAlertsCount > 0 && (
-          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 flex items-start gap-3">
-            <Bell className="size-5 shrink-0 mt-0.5" />
+    <div className="min-h-screen bg-gradient-to-br from-navy-50 dark:from-navy-950 to-ivory-50 dark:to-navy-900">
+      {/* Header */}
+      <div className="sticky top-0 z-40 border-b border-gold-500/10 bg-white dark:bg-navy-900/95 backdrop-blur">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-white font-bold">
+              S
+            </div>
             <div>
-              <p className="font-bold text-sm">Action Needed</p>
-              <p className="text-xs text-rose-300/80 mt-0.5">
-                You have {unreadAlertsCount} unread notification{unreadAlertsCount !== 1 ? "s" : ""} on your dashboard.
-              </p>
+              <h1 className="font-bold text-navy-950 dark:text-white">Student Dashboard</h1>
+              <p className="text-xs text-navy-800/60 dark:text-ivory-300/60">Welcome back</p>
             </div>
           </div>
-        )}
+          <Link href="/" className="px-4 py-2 rounded-lg bg-gold-400 text-navy-950 font-semibold hover:bg-gold-300 transition text-sm">
+            Back to Home
+          </Link>
+        </div>
+      </div>
 
-        <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-          {/* Mobile-Friendly Profile Card */}
-          <div className="space-y-4">
-            <StudentProfileCard
-              fullName={student?.fullName ?? "Student"}
-              rank={student?.rank ?? null}
-              batch={student?.batchType ?? "Unknown"}
-              attendance={student?.attendance ?? 0}
-              overall={student?.average ?? 0}
-              cetReadiness={student?.cetReadiness ?? 0}
-              currentChapter={student?.currentChapter ?? "N/A"}
-              nextTest={student?.nextTest ?? "N/A"}
-              mainProgress={student?.mainProgress ?? 0}
-            />
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-navy-950 dark:text-white mb-2">Hello, {student.name}! ??</h2>
+          <p className="text-navy-800/70 dark:text-ivory-300/70">Here's your learning overview</p>
+        </div>
 
-            {/* Quick Micro-stats card */}
-            <Card className="bg-navy-900 border-gold-500/20 text-white shadow-md">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-sm font-semibold text-navy-800/70 dark:text-ivory-300/70">Rank</p>
+              <p className="text-3xl font-bold text-navy-950 dark:text-white mt-2">#{student.rank}</p>
+              <p className="text-xs text-gold-600 mt-2">In your batch</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-sm font-semibold text-navy-800/70 dark:text-ivory-300/70">Average</p>
+              <p className="text-3xl font-bold text-navy-950 dark:text-white mt-2">{student.average}%</p>
+              <p className="text-xs text-green-600 mt-2">Very Good!</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-sm font-semibold text-navy-800/70 dark:text-ivory-300/70">Batch</p>
+              <p className="text-lg font-bold text-navy-950 dark:text-white mt-2">{student.batch}</p>
+              <p className="text-xs text-gold-600 mt-2">Science PCM</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-sm font-semibold text-navy-800/70 dark:text-ivory-300/70">Next Test</p>
+              <p className="text-sm font-bold text-navy-950 dark:text-white mt-2">{student.nextTest}</p>
+              <p className="text-xs text-rose-600 mt-2">12 hours away</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Grid */}
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Notifications */}
+          <div className="md:col-span-2">
+            <Card className="border-gold-500/20">
+              <CardHeader className="border-b border-gold-500/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bell className="size-5 text-gold-600 animate-pulse" />
+                    <CardTitle>Notifications</CardTitle>
+                  </div>
+                  <Badge tone="red" className="text-xs">{notifications.length} new</Badge>
+                </div>
+              </CardHeader>
               <CardContent className="p-4 space-y-3">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-ivory-100/55 uppercase font-semibold">Latest Test Score</span>
-                  <Badge tone={student?.average && student.average >= 75 ? "green" : "gold"}>
-                    {student?.average ?? 0}%
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-ivory-100/55 uppercase font-semibold">Active Syllabus Chapter</span>
-                  <span className="font-bold text-gold-300 text-right truncate max-w-[200px]" title={student?.currentChapter || "N/A"}>
-                    {student?.currentChapter || "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-ivory-100/55 uppercase font-semibold">Next Scheduled Test</span>
-                  <span className="font-bold text-right truncate max-w-[200px]" title={student?.nextTest || "None scheduled"}>
-                    {student?.nextTest || "None scheduled"}
-                  </span>
-                </div>
+                {notifications.map((notif) => (
+                  <div key={notif.id} className="p-3 rounded-lg border border-gold-500/15 bg-white dark:bg-navy-900 hover:border-gold-500/40 transition">
+                    <div className="flex justify-between items-start gap-2 mb-1">
+                      <p className="font-semibold text-navy-950 dark:text-white text-sm">{notif.title}</p>
+                      <span className="text-xs text-navy-500/60 dark:text-ivory-300/50">{notif.date}</span>
+                    </div>
+                    <p className="text-xs text-navy-800/70 dark:text-ivory-300/70">{notif.body}</p>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </div>
 
-          {/* Performance Chart Card */}
-          <Card className="border-gold-500/20 shadow-md">
-            <CardHeader className="flex-row items-center justify-between pb-2 border-b border-gold-500/10">
-              <div>
-                <CardTitle className="text-lg font-bold text-navy-950">Performance Overview</CardTitle>
-                <p className="text-xs text-navy-800/60 mt-1">Weighted score tracking over latest chapter tests</p>
-              </div>
-              <ArrowUpRight className="size-5 text-gold-600" />
+          {/* Quick Actions */}
+          <Card className="border-gold-500/20 h-fit">
+            <CardHeader className="border-b border-gold-500/10">
+              <CardTitle className="text-base">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="pt-4">
-              {progressTrend.length > 0 ? (
-                <ProfileChart data={progressTrend} />
-              ) : (
-                <div className="p-12 text-center text-navy-500 text-sm">
-                  Upload tests to display your performance score trend.
-                </div>
-              )}
+            <CardContent className="p-4 space-y-2">
+              <a href="#" className="flex items-center gap-3 p-3 rounded-lg border border-gold-500/15 hover:border-gold-500/50 hover:bg-gold-50/10 dark:hover:bg-navy-900 transition text-sm font-semibold text-navy-950 dark:text-ivory-100">
+                <BookOpen className="size-4 text-gold-600" />
+                <span>View Tests</span>
+                <ArrowUpRight className="size-3 ml-auto text-navy-500/50" />
+              </a>
+              <a href="#" className="flex items-center gap-3 p-3 rounded-lg border border-gold-500/15 hover:border-gold-500/50 hover:bg-gold-50/10 dark:hover:bg-navy-900 transition text-sm font-semibold text-navy-950 dark:text-ivory-100">
+                <Flame className="size-4 text-gold-600" />
+                <span>Leaderboard</span>
+                <ArrowUpRight className="size-3 ml-auto text-navy-500/50" />
+              </a>
+              <a href="#" className="flex items-center gap-3 p-3 rounded-lg border border-gold-500/15 hover:border-gold-500/50 hover:bg-gold-50/10 dark:hover:bg-navy-900 transition text-sm font-semibold text-navy-950 dark:text-ivory-100">
+                <ShieldCheck className="size-4 text-gold-600" />
+                <span>Progress</span>
+                <ArrowUpRight className="size-3 ml-auto text-navy-500/50" />
+              </a>
             </CardContent>
           </Card>
         </div>
 
-        {/* Live Alerts & Notifications */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card className="border-gold-500/20 shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between border-b border-gold-500/10 py-3.5">
-              <CardTitle className="flex items-center gap-2 text-base font-bold text-navy-950">
-                <Bell className="size-4 text-gold-600 animate-pulse" />
-                Live Notification Center
-              </CardTitle>
-              {unreadAlertsCount > 0 && (
-                <Badge tone="red" className="text-xs">{unreadAlertsCount} new</Badge>
-              )}
-            </CardHeader>
-            <CardContent className="p-4 space-y-3">
-              {notifications.length ? (
-                notifications.map((note) => (
-                  <div key={note.id} className="rounded-xl border border-gold-500/15 bg-white p-3 hover:border-gold-500/40 transition-colors shadow-sm">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-bold text-navy-950 text-sm">{note.title}</p>
-                      <span className="text-[10px] text-navy-500 uppercase font-semibold">
-                        {new Date(note.createdAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-navy-800/75 leading-relaxed">{note.body}</p>
-                  </div>
-                ))
-              ) : (
-                <div className="p-6 text-center text-xs text-navy-500">
-                  No new unread alerts or notifications.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Quick Menu Actions */}
-          <Card className="border-gold-500/20 shadow-md">
-            <CardHeader className="border-b border-gold-500/10 py-3.5">
-              <CardTitle className="text-base font-bold text-navy-950">Coaching Core Operations</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 grid gap-3">
-              <a
-                href="/student/tests"
-                className="flex items-center justify-between p-3 rounded-xl border border-gold-500/15 bg-white hover:border-gold-500/50 hover:bg-gold-50/10 transition-all font-semibold text-sm text-navy-950 shadow-sm"
-              >
-                <div className="flex items-center gap-2.5">
-                  <ShieldCheck className="size-4.5 text-gold-600" />
-                  <span>Test & Marks History</span>
-                </div>
-                <ArrowUpRight className="size-4 text-navy-500" />
-              </a>
-
-              <a
-                href="/leaderboard"
-                className="flex items-center justify-between p-3 rounded-xl border border-gold-500/15 bg-white hover:border-gold-500/50 hover:bg-gold-50/10 transition-all font-semibold text-sm text-navy-950 shadow-sm"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Flame className="size-4.5 text-gold-600" />
-                  <span>Interactive Leaderboards</span>
-                </div>
-                <ArrowUpRight className="size-4 text-navy-500" />
-              </a>
-
-              <a
-                href="/student/progress"
-                className="flex items-center justify-between p-3 rounded-xl border border-gold-500/15 bg-white hover:border-gold-500/50 hover:bg-gold-50/10 transition-all font-semibold text-sm text-navy-950 shadow-sm"
-              >
-                <div className="flex items-center gap-2.5">
-                  <BookOpen className="size-4.5 text-gold-600" />
-                  <span>Syllabus Progression Chart</span>
-                </div>
-                <ArrowUpRight className="size-4 text-navy-500" />
-              </a>
-            </CardContent>
-          </Card>
+        {/* Demo Info */}
+        <div className="mt-8 p-6 rounded-lg border border-gold-500/20 bg-gold-50/50 dark:bg-navy-900/50">
+          <p className="text-sm text-navy-800 dark:text-ivory-300">
+            <strong>This is a demo view.</strong> Login with your actual credentials to see your real data, tests, progress, and personalized recommendations.
+          </p>
         </div>
       </div>
-    </AppShell>
+    </div>
   );
 }

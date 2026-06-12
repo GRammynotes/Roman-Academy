@@ -20,33 +20,24 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { RomanWordmark } from "@/components/roman-wordmark";
 import { cn } from "@/lib/utils";
+import { Lightfall } from "@/components/ui/lightfall";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 type ShellRole = "teacher" | "student" | "admin";
 
-const teacherNavItems = [
+const teacherNavItems: Array<{ href: string; label: string; icon: any }> = [
   { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
   { href: "/teacher/upload-marks", label: "Upload marks", icon: Upload },
-  { href: "/teacher/students", label: "Students", icon: Users },
-  { href: "/teacher/syllabus", label: "Syllabus", icon: ClipboardList },
-  { href: "/teacher/schedule", label: "Tests", icon: CalendarDays },
-  { href: "/teacher/leaderboard", label: "Leaderboard", icon: Trophy },
-  { href: "/teacher/whatsapp", label: "WhatsApp", icon: MessageSquareText },
+  { href: "/teacher/students", label: "Manage Students", icon: Users },
+  { href: "/teacher/whatsapp", label: "WhatsApp queue", icon: MessageSquareText },
+  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/teacher/settings", label: "Settings", icon: Settings }
 ];
 
-const teacherMobileItems = [
-  { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/teacher/upload-marks", label: "Upload", icon: Upload },
-  { href: "/teacher/students", label: "Students", icon: Users },
-  { href: "/teacher/leaderboard", label: "Rank", icon: Trophy }
-];
-
-const studentNavItems = [
+const studentNavItems: Array<{ href: string; label: string; icon: any }> = [
   { href: "/student", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/student/progress", label: "Progress", icon: LineChart },
   { href: "/student/tests", label: "Tests", icon: CalendarDays },
-  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-  { href: "/student/profile", label: "Profile", icon: UserRound },
+  { href: "/leaderboard", label: "Rank", icon: Trophy },
   { href: "/student/settings", label: "Settings", icon: Settings }
 ];
 
@@ -55,6 +46,13 @@ const studentMobileItems = [
   { href: "/student/tests", label: "Tests", icon: CalendarDays },
   { href: "/leaderboard", label: "Rank", icon: Trophy },
   { href: "/student/profile", label: "Profile", icon: UserRound }
+];
+
+const teacherMobileItems = [
+  { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/teacher/upload-marks", label: "Upload", icon: Upload },
+  { href: "/teacher/students", label: "Students", icon: Users },
+  { href: "/teacher/settings", label: "Settings", icon: Settings }
 ];
 
 const adminNavItems = [
@@ -103,6 +101,17 @@ export function AppShell({
   role?: ShellRole;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [effectsEnabled, setEffectsEnabled] = React.useState(true);
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem("ra_effects_enabled");
+    if (saved !== null) {
+      setEffectsEnabled(saved === "true");
+    }
+    const handleToggle = (e: any) => setEffectsEnabled(e.detail);
+    window.addEventListener("theme-effect-toggle", handleToggle);
+    return () => window.removeEventListener("theme-effect-toggle", handleToggle);
+  }, []);
 
   const desktopNavItems =
     role === "admin"
@@ -119,11 +128,19 @@ export function AppShell({
         : studentMobileItems;
 
   return (
-    <div className="flex h-screen flex-col bg-navy-950">
+    <div className="relative flex h-screen flex-col lg:flex-row bg-transparent">
+      {effectsEnabled && (
+        <Lightfall 
+          colors={["#D4AF37", "#F7E7A1", "#0A2342"]} 
+          backgroundColor="#050B1A"
+          speed={0.5} 
+          streakCount={20} 
+        />
+      )}
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex flex-col border-r border-gold-400/15 bg-navy-950 w-56">
-        <div className="border-b border-gold-400/15 p-4">
-          <RomanWordmark />
+      <div className="hidden lg:flex flex-col border-r border-gold-400/15 bg-navy-950/80 backdrop-blur-md w-56 z-10">
+        <div className="border-b border-gold-400/15 p-4 flex items-center justify-between">
+          <RomanWordmark compact={false} />
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
@@ -149,16 +166,17 @@ export function AppShell({
           })}
         </nav>
 
-        <div className="border-t border-gold-400/15 p-4 text-xs text-ivory-100/50">
-          <p>Roman Academy © 2026</p>
+        <div className="border-t border-gold-400/15 p-4 flex flex-col gap-3">
+          <ThemeToggle />
+          <p className="text-xs text-ivory-100/50">Roman Academy © 2026</p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden z-10">
         {/* Top Bar (Mobile + Tablet) */}
-        <div className="flex items-center justify-between border-b border-gold-400/15 bg-navy-950 px-4 py-3 lg:hidden">
-          <RomanWordmark />
+        <div className="flex items-center justify-between border-b border-gold-400/15 bg-navy-950/80 backdrop-blur-md px-4 py-3 lg:hidden">
+          <RomanWordmark compact={true} />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="rounded-lg p-2 hover:bg-white/10"
@@ -178,7 +196,7 @@ export function AppShell({
               className="flex-1 bg-black/20 backdrop-blur-sm"
               onClick={() => setMobileMenuOpen(false)}
             />
-            <div className="w-56 border-l border-gold-400/15 bg-navy-950 overflow-y-auto">
+            <div className="w-56 border-l border-gold-400/15 bg-navy-950/90 backdrop-blur-md overflow-y-auto">
               <nav className="space-y-1 p-4">
                 {desktopNavItems.map((item) => {
                   const Icon = item.icon;
@@ -202,6 +220,9 @@ export function AppShell({
                   );
                 })}
               </nav>
+              <div className="border-t border-gold-400/15 p-4">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         )}
@@ -213,7 +234,7 @@ export function AppShell({
       </div>
 
       {/* Bottom Navigation (Mobile Only) */}
-      <div className="fixed bottom-0 left-0 right-0 flex lg:hidden border-t border-gold-400/15 bg-navy-950">
+      <div className="fixed bottom-0 left-0 right-0 flex lg:hidden border-t border-gold-400/15 bg-navy-950/80 backdrop-blur-md z-10">
         <div className="flex w-full items-center justify-around">
           {mobileNavItems.map((item) => {
             const Icon = item.icon;

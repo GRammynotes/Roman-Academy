@@ -8,25 +8,29 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["Inter", "Segoe UI", "system-ui", "sans-serif"],
-        serif: ["Georgia", "Cambria", "serif"]
+        serif: ["Georgia", "Cambria", "serif"],
+        orbitron: ["Orbitron", "sans-serif"]
       },
       colors: {
         navy: {
-          950: "#020b18",
-          900: "#06152b",
+          950: "#050B1A",
+          900: "#0A2342",
           850: "#08203f",
           800: "#0d2a50"
         },
         gold: {
           600: "#a96d17",
           500: "#ca911f",
-          400: "#d6a22c",
-          300: "#f2d36c"
+          400: "#D4AF37",
+          300: "#F7E7A1"
         },
         ivory: {
           50: "#fbf7ee",
           100: "#f4efe5",
           200: "#e8dcc9"
+        },
+        accent: {
+          glow: "#FFE082"
         }
       },
       boxShadow: {

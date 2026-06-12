@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "ts-node --skip-project prisma/seed.ts",
+    "seed": "node -r ts-node/register prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",
@@ -17,6 +19,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.16.0",
     "lucide-react": "^0.468.0",
+    "motion": "^12.40.0",
     "next": "^15.3.3",
     "pdfkit": "^0.19.0",
     "prisma": "^6.9.0",
