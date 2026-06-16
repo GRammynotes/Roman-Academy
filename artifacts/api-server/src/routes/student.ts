@@ -94,6 +94,7 @@ router.get("/student/tests", requireStudent, async (req: any, res) => {
 
     const results = await db.select({
       id: studentTestResultsTable.id,
+      testId: studentTestResultsTable.testId,
       testName: testsTable.testName,
       testType: testsTable.testType,
       date: testsTable.date,
@@ -107,7 +108,7 @@ router.get("/student/tests", requireStudent, async (req: any, res) => {
       .orderBy(desc(testsTable.date));
 
     const enriched = await Promise.all(results.map(async (r) => {
-      const chapters = await db.select().from(testChaptersTable).where(eq(testChaptersTable.testId, r.id));
+      const chapters = await db.select().from(testChaptersTable).where(eq(testChaptersTable.testId, r.testId));
       return {
         ...r,
         date: r.date ? new Date(r.date).toLocaleDateString("en-IN") : "N/A",

@@ -109,11 +109,26 @@ router.get("/teacher/dashboard", requireRole(["teacher", "admin"]), async (req: 
       .orderBy(desc(studentTestResultsTable.createdAt))
       .limit(5);
 
+    const allPercentages = studentIds.length > 0
+      ? (await db.select({ percentage: studentTestResultsTable.percentage })
+          .from(studentTestResultsTable)
+          .where(sql`${studentTestResultsTable.studentId} = ANY(ARRAY[${sql.join(studentIds.map(id => sql`${id}`), sql`, `)}]::text[])`))
+          .map(r => r.percentage)
+      : [];
+
+    const scoreDistribution = [
+      { band: "90-100%", count: allPercentages.filter(p => p >= 90).length },
+      { band: "75-89%",  count: allPercentages.filter(p => p >= 75 && p < 90).length },
+      { band: "60-74%",  count: allPercentages.filter(p => p >= 60 && p < 75).length },
+      { band: "<60%",    count: allPercentages.filter(p => p < 60).length },
+    ];
+
     return res.json({
       totalStudents: filtered.length,
       avgScore,
       testsCreated,
       lowPerformers,
+      scoreDistribution,
       recentActivity: recentActivity.map(r => ({
         name: r.fullName,
         action: "Completed Test",
