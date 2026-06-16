@@ -27,7 +27,7 @@ function checkRateLimit(identifier: string): boolean {
   return true;
 }
 
-router.post("/auth/login", async (req, res) => {
+router.post("/auth/login", async (req: any, res) => {
   try {
     const clientIp = (req.headers["x-forwarded-for"] as string) || req.ip || "unknown";
     if (!checkRateLimit(clientIp)) {
@@ -68,10 +68,9 @@ router.post("/auth/login", async (req, res) => {
       studentId = students[0]?.id;
     }
 
-    res.setHeader("Set-Cookie", [
-      `ra_role=${role}; Path=/; SameSite=Strict; Max-Age=${60 * 60 * 24 * 7}`,
-      `ra_user_id=${user.id}; Path=/; SameSite=Strict; Max-Age=${60 * 60 * 24 * 7}`,
-    ]);
+    req.session.userId = user.id;
+    req.session.role = role;
+    req.session.username = user.username;
 
     return res.json({
       success: true,
@@ -86,12 +85,25 @@ router.post("/auth/login", async (req, res) => {
   }
 });
 
-router.post("/auth/logout", (req, res) => {
-  res.setHeader("Set-Cookie", [
-    "ra_role=; Path=/; Max-Age=0",
-    "ra_user_id=; Path=/; Max-Age=0",
-  ]);
-  return res.json({ success: true });
+router.post("/auth/logout", (req: any, res) => {
+  req.session.destroy((err: any) => {
+    if (err) {
+      logger.error({ err }, "Session destroy error");
+    }
+    res.clearCookie("ra_session");
+    return res.json({ success: true });
+  });
+});
+
+router.get("/auth/me", (req: any, res) => {
+  if (!req.session?.userId) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  return res.json({
+    userId: req.session.userId,
+    role: req.session.role,
+    username: req.session.username,
+  });
 });
 
 export default router;

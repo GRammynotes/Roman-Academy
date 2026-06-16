@@ -33,8 +33,6 @@ export default function LoginPage() {
         return;
       }
 
-      document.cookie = `ra_role=${data.role}; path=/; SameSite=Strict`;
-      document.cookie = `ra_user_id=${data.userId}; path=/; SameSite=Strict`;
       const redirectUrl = data.role === "teacher" ? "/teacher" : "/student";
       setLocation(redirectUrl);
     } catch (err) {

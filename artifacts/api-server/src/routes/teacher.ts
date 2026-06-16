@@ -20,26 +20,14 @@ import { logger } from "../lib/logger";
 
 const router = Router();
 
-function getRoleFromCookies(cookieHeader: string | undefined): string | null {
-  if (!cookieHeader) return null;
-  const match = cookieHeader.match(/\bra_role=([^;]+)/);
-  return match?.[1] ?? null;
-}
-
-function getUserIdFromCookies(cookieHeader: string | undefined): string | null {
-  if (!cookieHeader) return null;
-  const match = cookieHeader.match(/\bra_user_id=([^;]+)/);
-  return match?.[1] ?? null;
-}
-
 function requireRole(allowedRoles: string[]) {
   return (req: any, res: any, next: any) => {
-    const role = getRoleFromCookies(req.headers.cookie);
+    const role = req.session?.role;
     if (!role || !allowedRoles.includes(role)) {
       return res.status(403).json({ error: "Unauthorized" });
     }
     req.userRole = role;
-    req.userId = getUserIdFromCookies(req.headers.cookie);
+    req.userId = req.session.userId;
     next();
   };
 }
