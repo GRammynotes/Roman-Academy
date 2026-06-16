@@ -78,7 +78,7 @@ export default function SchedulePage() {
   const load = () => {
     setLoading(true);
     fetch(`${import.meta.env.BASE_URL}api/teacher/schedule`)
-      .then(r => r.json()).then(setItems).catch(() => setItems([])).finally(() => setLoading(false));
+      .then(r => r.json()).then(data => setItems(Array.isArray(data) ? data : [])).catch(() => setItems([])).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
 
