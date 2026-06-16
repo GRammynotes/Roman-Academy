@@ -14,14 +14,8 @@ type LeaderboardStudent = {
   rankMovement: number | null;
 };
 
-function getCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
 export default function LeaderboardPage() {
-  const role = getCookie("ra_role") || "student";
+  const role = (typeof localStorage !== "undefined" ? localStorage.getItem("ra_role") : null) || "student";
   const [scope, setScope] = useState<"weekly" | "monthly" | "quarterly" | "overall">("weekly");
   const [stream, setStream] = useState("SCIENCE_PCM");
   const [classLevel, setClassLevel] = useState("TWELVE");

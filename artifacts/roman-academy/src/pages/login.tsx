@@ -33,6 +33,7 @@ export default function LoginPage() {
         return;
       }
 
+      localStorage.setItem("ra_role", data.role);
       const redirectUrl = data.role === "teacher" ? "/teacher" : "/student";
       setLocation(redirectUrl);
     } catch (err) {

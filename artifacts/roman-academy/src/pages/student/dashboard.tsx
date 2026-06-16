@@ -27,8 +27,7 @@ export default function StudentDashboard() {
 
   const handleLogout = async () => {
     await fetch(`${import.meta.env.BASE_URL}api/auth/logout`, { method: "POST" });
-    document.cookie = "ra_role=; path=/; max-age=0";
-    document.cookie = "ra_user_id=; path=/; max-age=0";
+    localStorage.removeItem("ra_role");
     window.location.href = "/login";
   };
 
