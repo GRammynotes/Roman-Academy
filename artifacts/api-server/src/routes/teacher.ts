@@ -277,7 +277,7 @@ router.get("/teacher/schedule", requireRole(["teacher", "admin"]), async (req: a
       stream: batchesTable.stream,
     }).from(scheduledTestsTable)
       .innerJoin(batchesTable, eq(scheduledTestsTable.batchId, batchesTable.id))
-      .where(sql`${scheduledTestsTable.batchId} = ANY(${batchIds})`)
+      .where(sql`${scheduledTestsTable.batchId} = ANY(ARRAY[${sql.join(batchIds.map(id => sql`${id}`), sql`, `)}]::text[])`)
       .orderBy(scheduledTestsTable.scheduledDate);
 
     return res.json(scheduled.map(s => ({
