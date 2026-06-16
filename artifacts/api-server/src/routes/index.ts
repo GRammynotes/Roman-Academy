@@ -4,6 +4,7 @@ import authRouter from "./auth";
 import teacherRouter from "./teacher";
 import studentRouter from "./student";
 import adminRouter from "./admin";
+import pushRouter from "./push";
 
 const router: IRouter = Router();
 
@@ -12,5 +13,6 @@ router.use(authRouter);
 router.use(teacherRouter);
 router.use(studentRouter);
 router.use(adminRouter);
+router.use(pushRouter);
 
 export default router;

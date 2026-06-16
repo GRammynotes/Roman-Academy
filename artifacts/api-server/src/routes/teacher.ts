@@ -17,6 +17,7 @@ import { eq, and, desc, sql, ilike } from "drizzle-orm";
 import * as bcryptjs from "bcryptjs";
 import crypto from "crypto";
 import { logger } from "../lib/logger";
+import { sendPushNotification } from "./push";
 
 const router = Router();
 
@@ -503,6 +504,28 @@ router.post("/teacher/upload-marks", requireRole(["teacher", "admin"]), async (r
           percentage,
         });
         processed.push({ name: result.name, score: result.score, percentage });
+      }
+    }
+
+    if (processed.length > 0) {
+      const processedStudentIds = processed.map(p => p.name);
+      const notifyStudents = await db.select({
+        pushToken: usersTable.pushToken,
+      }).from(studentsTable)
+        .innerJoin(usersTable, eq(studentsTable.userId, usersTable.id))
+        .where(
+          sql`${studentsTable.fullName} ILIKE ANY(ARRAY[${sql.join(processedStudentIds.map(n => sql`${'%' + n + '%'}`), sql`, `)}]::text[])`
+        );
+
+      for (const { pushToken } of notifyStudents) {
+        if (pushToken) {
+          sendPushNotification(
+            pushToken,
+            "New Test Results Available",
+            `Your results for "${testName}" have been uploaded. Tap to view.`,
+            { screen: "student-tests" }
+          ).catch(() => {});
+        }
       }
     }
 
