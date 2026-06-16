@@ -14,24 +14,12 @@ import { logger } from "../lib/logger";
 
 const router = Router();
 
-function getUserIdFromCookies(cookieHeader: string | undefined): string | null {
-  if (!cookieHeader) return null;
-  const match = cookieHeader.match(/\bra_user_id=([^;]+)/);
-  return match?.[1] ?? null;
-}
-
-function getRoleFromCookies(cookieHeader: string | undefined): string | null {
-  if (!cookieHeader) return null;
-  const match = cookieHeader.match(/\bra_role=([^;]+)/);
-  return match?.[1] ?? null;
-}
-
 function requireStudent(req: any, res: any, next: any) {
-  const role = getRoleFromCookies(req.headers.cookie);
+  const role = req.session?.role;
   if (role !== "student") {
     return res.status(403).json({ error: "Unauthorized" });
   }
-  req.userId = getUserIdFromCookies(req.headers.cookie);
+  req.userId = req.session.userId;
   next();
 }
 
