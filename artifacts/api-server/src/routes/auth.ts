@@ -31,7 +31,7 @@ router.post("/auth/login", async (req: any, res) => {
   try {
     const clientIp = (req.headers["x-forwarded-for"] as string) || req.ip || "unknown";
     if (!checkRateLimit(clientIp)) {
-      return res.status(429).json({ error: "Too many login attempts. Please try again later." });
+      return res.status(429).json({ error: "Too many login attempts. Please try again in 15 minutes." });
     }
 
     const { username, password } = req.body;
@@ -71,12 +71,14 @@ router.post("/auth/login", async (req: any, res) => {
     req.session.userId = user.id;
     req.session.role = role;
     req.session.username = user.username;
+    req.session.isDemo = user.isDemo ?? false;
 
     return res.json({
       success: true,
       role,
       userId: user.id,
       username: user.username,
+      isDemo: user.isDemo ?? false,
       ...(studentId && { studentId }),
     });
   } catch (err) {
@@ -103,7 +105,45 @@ router.get("/auth/me", (req: any, res) => {
     userId: req.session.userId,
     role: req.session.role,
     username: req.session.username,
+    isDemo: req.session.isDemo ?? false,
   });
+});
+
+router.post("/auth/change-password", async (req: any, res) => {
+  try {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    if (req.session.isDemo) {
+      return res.status(403).json({ error: "Demo account — changes not allowed" });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Current and new password are required" });
+    }
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ error: "New password must be at least 6 characters" });
+    }
+
+    const users = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const match = await bcryptjs.compare(String(currentPassword), user.passwordHash);
+    if (!match) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
+
+    const newHash = await bcryptjs.hash(String(newPassword).slice(0, 128), 10);
+    await db.update(usersTable).set({ passwordHash: newHash, updatedAt: new Date() }).where(eq(usersTable.id, user.id));
+
+    return res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Change password error");
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 export default router;

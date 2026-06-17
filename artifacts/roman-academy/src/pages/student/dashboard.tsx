@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, BookOpen, Flame, ShieldCheck, ArrowUpRight, Trophy, LogOut } from "lucide-react";
+import { Bell, BookOpen, Flame, ShieldCheck, ArrowUpRight, Trophy, LogOut, Lock } from "lucide-react";
 
 type Profile = {
   fullName: string;
@@ -14,6 +14,7 @@ type Profile = {
   attendance: number;
   currentChapter: string;
   nextTest: string;
+  isDemo?: boolean;
 };
 
 export default function StudentDashboard() {
@@ -28,6 +29,7 @@ export default function StudentDashboard() {
   const handleLogout = async () => {
     await fetch(`${import.meta.env.BASE_URL}api/auth/logout`, { method: "POST" });
     localStorage.removeItem("ra_role");
+    localStorage.removeItem("ra_is_demo");
     window.location.href = "/login";
   };
 
@@ -35,11 +37,25 @@ export default function StudentDashboard() {
     <AppShell active="/student" role="student">
       <div className="p-4 md:p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <PageHeader eyebrow="Student Portal" title={`Hello, ${profile?.fullName?.split(" ")[0] || "Student"}!`} />
+          <div className="flex items-center gap-3">
+            <PageHeader eyebrow="Student Portal" title={`Hello, ${profile?.fullName?.split(" ")[0] || "Student"}!`} />
+            {profile?.isDemo && (
+              <Badge tone="gold" className="flex items-center gap-1 shrink-0">
+                <Lock className="size-3" /> Demo Account
+              </Badge>
+            )}
+          </div>
           <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-ivory-100/60 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10">
             <LogOut className="size-4" /> Logout
           </button>
         </div>
+
+        {profile?.isDemo && (
+          <div className="flex items-center gap-3 p-3 rounded-lg border border-gold-500/30 bg-gold-400/10 text-gold-300 text-sm">
+            <Lock className="size-4 shrink-0" />
+            <span>You're viewing a <strong>demo account</strong>. Profile edits and password changes are disabled.</span>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[

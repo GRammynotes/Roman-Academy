@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import {
+  usersTable,
   studentsTable,
   studentTestResultsTable,
   testsTable,
@@ -20,14 +21,27 @@ function requireStudent(req: any, res: any, next: any) {
     return res.status(403).json({ error: "Unauthorized" });
   }
   req.userId = req.session.userId;
+  req.isDemo = req.session.isDemo ?? false;
   next();
 }
 
 router.get("/student/profile", requireStudent, async (req: any, res) => {
   try {
-    const students = await db.select().from(studentsTable).where(eq(studentsTable.userId, req.userId)).limit(1);
+    const students = await db.select({
+      id: studentsTable.id,
+      fullName: studentsTable.fullName,
+      whatsappContact: studentsTable.whatsappContact,
+      classLevel: studentsTable.classLevel,
+      stream: studentsTable.stream,
+      batchType: studentsTable.batchType,
+      joinedDate: studentsTable.joinedDate,
+    }).from(studentsTable).where(eq(studentsTable.userId, req.userId)).limit(1);
     const student = students[0];
     if (!student) return res.status(404).json({ error: "Student not found" });
+
+    const userRows = await db.select({ isDemo: usersTable.isDemo })
+      .from(usersTable).where(eq(usersTable.id, req.userId)).limit(1);
+    const isDemo = userRows[0]?.isDemo ?? false;
 
     const ranks = await db.select().from(rankHistoryTable)
       .where(eq(rankHistoryTable.studentId, student.id))
@@ -52,6 +66,7 @@ router.get("/student/profile", requireStudent, async (req: any, res) => {
       stream: student.stream,
       batchType: student.batchType,
       joinedDate: student.joinedDate,
+      isDemo,
       rank: ranks[0]?.rank || null,
       average: ranks[0]?.average || null,
       attendance: 90,
@@ -70,6 +85,10 @@ router.get("/student/profile", requireStudent, async (req: any, res) => {
 
 router.patch("/student/profile", requireStudent, async (req: any, res) => {
   try {
+    if (req.isDemo) {
+      return res.status(403).json({ error: "Demo account — changes not allowed" });
+    }
+
     const students = await db.select().from(studentsTable).where(eq(studentsTable.userId, req.userId)).limit(1);
     const student = students[0];
     if (!student) return res.status(404).json({ error: "Student not found" });

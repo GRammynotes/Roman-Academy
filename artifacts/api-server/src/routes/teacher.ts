@@ -546,4 +546,71 @@ router.get("/teacher/batches", requireRole(["teacher", "admin"]), async (req: an
   }
 });
 
+router.post("/teacher/promote-batch", requireRole(["teacher", "admin"]), async (req: any, res) => {
+  try {
+    const currentYear = new Date().getFullYear();
+    const nextYear = currentYear + 1;
+
+    const eleventhStudents = await db.select({
+      id: studentsTable.id,
+      batchId: studentsTable.batchId,
+    }).from(studentsTable).where(
+      and(eq(studentsTable.classLevel, "ELEVEN"), eq(studentsTable.archived, false))
+    );
+
+    const twelfthStudents = await db.select({
+      id: studentsTable.id,
+    }).from(studentsTable).where(
+      and(eq(studentsTable.classLevel, "TWELVE"), eq(studentsTable.archived, false))
+    );
+
+    if (twelfthStudents.length > 0) {
+      const twelfthIds = twelfthStudents.map(s => s.id);
+      for (const sid of twelfthIds) {
+        await db.update(studentsTable)
+          .set({ archived: true, promoted: true, graduationYear: currentYear })
+          .where(eq(studentsTable.id, sid));
+        await db.delete(rankHistoryTable).where(eq(rankHistoryTable.studentId, sid));
+      }
+    }
+
+    let newBatch12Id: string | null = null;
+    const newBatch12Name = `12th Science ${nextYear}`;
+    const existingBatch = await db.select().from(batchesTable).where(eq(batchesTable.name, newBatch12Name)).limit(1);
+    if (existingBatch.length > 0) {
+      newBatch12Id = existingBatch[0].id;
+    } else {
+      newBatch12Id = crypto.randomUUID();
+      await db.insert(batchesTable).values({
+        id: newBatch12Id,
+        name: newBatch12Name,
+        classLevel: "TWELVE",
+        stream: "SCIENCE_PCM",
+        startDate: new Date(),
+      });
+    }
+
+    if (eleventhStudents.length > 0) {
+      for (const s of eleventhStudents) {
+        await db.update(studentsTable)
+          .set({ classLevel: "TWELVE", batchType: newBatch12Name, batchId: newBatch12Id, promoted: true })
+          .where(eq(studentsTable.id, s.id));
+        await db.delete(rankHistoryTable).where(eq(rankHistoryTable.studentId, s.id));
+      }
+    }
+
+    logger.info(`Promoted ${eleventhStudents.length} 11th students to 12th, archived ${twelfthStudents.length} 12th students`);
+
+    return res.json({
+      success: true,
+      promoted: eleventhStudents.length,
+      archived: twelfthStudents.length,
+      newBatch: newBatch12Name,
+    });
+  } catch (err) {
+    logger.error({ err }, "Promote batch error");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

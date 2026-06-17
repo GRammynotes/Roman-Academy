@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, timestamp, integer, real, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, boolean, timestamp, integer, real, pgEnum, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -15,6 +15,7 @@ export const usersTable = pgTable("users", {
   username: text("username").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   firstLogin: boolean("first_login").default(true),
+  isDemo: boolean("is_demo").default(false),
   pushToken: text("push_token"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -44,8 +45,12 @@ export const studentsTable = pgTable("students", {
   parentContact: text("parent_contact"),
   catchUpMode: boolean("catch_up_mode").default(false),
   archived: boolean("archived").default(false),
+  promoted: boolean("promoted").default(false),
+  graduationYear: integer("graduation_year"),
   notes: text("notes"),
-});
+}, (table) => [
+  index("students_archived_batch_type_idx").on(table.archived, table.batchType),
+]);
 
 export const testsTable = pgTable("tests", {
   id: text("id").primaryKey().notNull(),
@@ -77,7 +82,9 @@ export const studentTestResultsTable = pgTable("student_test_results", {
   aiSummary: text("ai_summary"),
   whatsappStatus: draftStatusEnum("whatsapp_status").default("DRAFT"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("student_test_results_student_test_idx").on(table.studentId, table.testId),
+]);
 
 export const rankHistoryTable = pgTable("rank_history", {
   id: text("id").primaryKey().notNull(),
@@ -89,7 +96,9 @@ export const rankHistoryTable = pgTable("rank_history", {
   lastTest: real("last_test"),
   rankMovement: integer("rank_movement"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("rank_history_student_scope_idx").on(table.studentId, table.scope),
+]);
 
 export const chaptersTable = pgTable("chapters", {
   id: text("id").primaryKey().notNull(),
