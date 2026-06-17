@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { WandSparkles, CheckCircle2, AlertCircle, Loader2, MessageSquare, ChevronRight } from "lucide-react";
+import { WandSparkles, CheckCircle2, AlertCircle, Loader2, MessageSquare, ChevronRight, ChevronDown, ChevronUp, X } from "lucide-react";
+import { getChaptersForBatch, weightageColor, type SubjectChapters } from "@/lib/chapters";
 
 const TEST_TYPES = [
   { value: "WEEKLY_CHAPTER",   label: "Weekly Chapter Test" },
@@ -12,55 +13,7 @@ const TEST_TYPES = [
   { value: "REVISION_TEST",    label: "Revision Test" },
 ];
 
-const CHAPTERS_11: Record<string, string[]> = {
-  Physics: [
-    "Physical World & Units",
-    "Laws of Motion",
-    "Work Energy & Power",
-    "Thermal Properties of Matter",
-  ],
-  Chemistry: [
-    "Some Basic Concepts of Chemistry",
-    "Structure of Atom",
-    "Chemical Bonding",
-    "Redox Reactions",
-  ],
-  Mathematics: [
-    "Sets",
-    "Relations and Functions",
-    "Trigonometric Functions",
-    "Straight Lines",
-  ],
-};
-
-const CHAPTERS_12: Record<string, string[]> = {
-  Physics: [
-    "Electrostatics",
-    "Current Electricity",
-    "Magnetic Effects of Current",
-    "Electromagnetic Induction",
-    "Optics",
-  ],
-  Chemistry: [
-    "Solid State",
-    "Solutions",
-    "Electrochemistry",
-    "Chemical Kinetics",
-    "Surface Chemistry",
-  ],
-  Mathematics: [
-    "Relations & Functions (12th)",
-    "Matrices",
-    "Determinants",
-    "Continuity and Differentiability",
-    "Applications of Derivatives",
-  ],
-};
-
-const BATCHES = [
-  "12th Science 2026",
-  "11th Science 2026",
-];
+const BATCHES = ["12th Science 2026", "11th Science 2026"];
 
 const SELECT_CLS = "h-10 w-full rounded-lg border border-gold-500/25 bg-navy-900 px-3 text-sm text-white outline-none focus:ring-2 focus:ring-gold-400/40";
 const INPUT_CLS  = "h-10 w-full rounded-lg border border-gold-500/25 bg-navy-900 px-3 text-sm text-white placeholder-ivory-100/30 outline-none focus:ring-2 focus:ring-gold-400/40";
@@ -76,6 +29,108 @@ type UploadResult = {
   nextChapter: string | null;
 };
 
+function SubjectPanel({
+  group,
+  selectedChapters,
+  onToggle,
+}: {
+  group: SubjectChapters;
+  selectedChapters: string[];
+  onToggle: (name: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedInSubject = group.chapters.filter(c => selectedChapters.includes(c.name));
+  const allSelected = selectedInSubject.length === group.chapters.length;
+
+  const toggleAll = () => {
+    if (allSelected) {
+      group.chapters.forEach(c => {
+        if (selectedChapters.includes(c.name)) onToggle(c.name);
+      });
+    } else {
+      group.chapters.forEach(c => {
+        if (!selectedChapters.includes(c.name)) onToggle(c.name);
+      });
+    }
+  };
+
+  const subjectColor: Record<string, string> = {
+    Physics: "text-blue-400",
+    Mathematics: "text-gold-400",
+    Chemistry: "text-emerald-400",
+  };
+
+  return (
+    <div className="rounded-lg border border-gold-500/20 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-3 py-2.5 bg-navy-900/70 hover:bg-navy-900 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span className={`text-sm font-bold uppercase tracking-wide ${subjectColor[group.subject] ?? "text-gold-400"}`}>
+            {group.subject}
+          </span>
+          {selectedInSubject.length > 0 && (
+            <span className="text-xs bg-gold-400 text-navy-950 font-bold px-1.5 py-0.5 rounded-full">
+              {selectedInSubject.length}/{group.chapters.length}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {selectedInSubject.length === 0 && (
+            <span className="text-xs text-ivory-100/30">{group.chapters.length} chapters</span>
+          )}
+          {open ? <ChevronUp className="size-4 text-ivory-100/40" /> : <ChevronDown className="size-4 text-ivory-100/40" />}
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-gold-500/15 bg-navy-950/50">
+          <div className="flex items-center justify-between px-3 py-1.5 border-b border-gold-500/10">
+            <span className="text-xs text-ivory-100/40">{group.chapters.length} chapters · click to select</span>
+            <button
+              type="button"
+              onClick={toggleAll}
+              className="text-xs text-gold-400 hover:text-gold-300 font-semibold transition-colors"
+            >
+              {allSelected ? "Deselect all" : "Select all"}
+            </button>
+          </div>
+          <div className="divide-y divide-gold-500/10">
+            {group.chapters.map(ch => {
+              const selected = selectedChapters.includes(ch.name);
+              return (
+                <button
+                  key={ch.name}
+                  type="button"
+                  onClick={() => onToggle(ch.name)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
+                    selected ? "bg-gold-400/10" : "hover:bg-white/5"
+                  }`}
+                >
+                  <div className={`size-4 rounded flex items-center justify-center shrink-0 border transition-all ${
+                    selected ? "bg-gold-400 border-gold-400" : "border-gold-500/30"
+                  }`}>
+                    {selected && <CheckCircle2 className="size-3 text-navy-950" />}
+                  </div>
+                  <span className="text-xs text-ivory-100/50 font-mono w-14 shrink-0">{ch.num}</span>
+                  <span className={`flex-1 text-sm ${selected ? "text-white font-semibold" : "text-ivory-100/80"}`}>
+                    {ch.name}
+                  </span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded border font-mono shrink-0 ${weightageColor(ch.weightage)}`}>
+                    {ch.weightage}M
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function UploadMarksPage() {
   const [text, setText] = useState("");
   const [testType, setTestType] = useState("WEEKLY_CHAPTER");
@@ -86,11 +141,11 @@ export default function UploadMarksPage() {
   const [result, setResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const chapterMap = batch.startsWith("11") ? CHAPTERS_11 : CHAPTERS_12;
+  const chapterGroups = getChaptersForBatch(batch);
 
-  const toggleChapter = (ch: string) => {
+  const toggleChapter = (name: string) => {
     setSelectedChapters(prev =>
-      prev.includes(ch) ? prev.filter(c => c !== ch) : [...prev, ch]
+      prev.includes(name) ? prev.filter(c => c !== name) : [...prev, name]
     );
   };
 
@@ -145,7 +200,6 @@ export default function UploadMarksPage() {
       </PageHeader>
 
       <div className="p-4 md:p-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        {/* Left: Upload Form */}
         <div className="space-y-4">
           <Card className="border-gold-500/20">
             <CardHeader className="border-b border-gold-500/10">
@@ -157,7 +211,11 @@ export default function UploadMarksPage() {
               <div className="grid grid-cols-2 gap-3">
                 <label className="space-y-1 text-sm text-ivory-100/80 col-span-2">
                   <span className="font-semibold">Batch</span>
-                  <select value={batch} onChange={e => { setBatch(e.target.value); setSelectedChapters([]); }} className={SELECT_CLS}>
+                  <select
+                    value={batch}
+                    onChange={e => { setBatch(e.target.value); setSelectedChapters([]); }}
+                    className={SELECT_CLS}
+                  >
                     {BATCHES.map(b => <option key={b}>{b}</option>)}
                   </select>
                 </label>
@@ -182,33 +240,57 @@ export default function UploadMarksPage() {
                 </label>
               </div>
 
-              {/* Chapter Multi-select */}
               <div className="space-y-2">
-                <p className="text-sm font-semibold text-ivory-100/80">Chapters Covered <span className="text-ivory-100/40 font-normal">(tick all tested)</span></p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-ivory-100/80">
+                    Chapters Covered{" "}
+                    <span className="text-ivory-100/40 font-normal">(tick all tested)</span>
+                  </p>
+                  {selectedChapters.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedChapters([])}
+                      className="text-xs text-ivory-100/40 hover:text-red-400 flex items-center gap-1 transition-colors"
+                    >
+                      <X className="size-3" /> Clear all
+                    </button>
+                  )}
+                </div>
+
                 <div className="space-y-2">
-                  {Object.entries(chapterMap).map(([subject, chs]) => (
-                    <div key={subject}>
-                      <p className="text-xs font-bold text-gold-400 uppercase tracking-wider mb-1">{subject}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {chs.map(ch => (
-                          <button
-                            key={ch}
-                            onClick={() => toggleChapter(ch)}
-                            className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
-                              selectedChapters.includes(ch)
-                                ? "bg-gold-400 text-navy-950 border-gold-400 font-bold"
-                                : "border-gold-500/25 text-ivory-100/60 hover:border-gold-400/50"
-                            }`}
-                          >
-                            {ch}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                  {chapterGroups.map(group => (
+                    <SubjectPanel
+                      key={group.subject}
+                      group={group}
+                      selectedChapters={selectedChapters}
+                      onToggle={toggleChapter}
+                    />
                   ))}
                 </div>
+
                 {selectedChapters.length > 0 && (
-                  <p className="text-xs text-gold-400">✓ {selectedChapters.length} chapter(s) selected — will be marked COMPLETED</p>
+                  <div className="rounded-lg border border-gold-500/20 bg-gold-400/5 p-3">
+                    <p className="text-xs font-semibold text-gold-400 mb-2">
+                      ✓ {selectedChapters.length} chapter(s) selected — will be marked COMPLETED
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedChapters.map(ch => (
+                        <span
+                          key={ch}
+                          className="inline-flex items-center gap-1 text-xs bg-gold-400/15 text-gold-300 border border-gold-500/30 rounded-full px-2 py-0.5"
+                        >
+                          {ch}
+                          <button
+                            type="button"
+                            onClick={() => toggleChapter(ch)}
+                            className="hover:text-red-400 transition-colors"
+                          >
+                            <X className="size-2.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </CardContent>
