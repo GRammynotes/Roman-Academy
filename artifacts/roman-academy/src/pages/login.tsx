@@ -34,9 +34,6 @@ export default function LoginPage() {
       }
 
       localStorage.setItem("ra_role", data.role);
-      if (data.isDemo) localStorage.setItem("ra_is_demo", "true");
-      else localStorage.removeItem("ra_is_demo");
-
       const redirectUrl = data.role === "teacher" ? "/teacher" : "/student";
       setLocation(redirectUrl);
     } catch (err) {
@@ -122,16 +119,17 @@ export default function LoginPage() {
               </form>
 
               <button
-                onClick={(e) => handleLogin(e as any, "kunal.datkhile.2026", "student@123")}
+                onClick={(e) => handleLogin(e as any, "roman_sir", "Roman@123")}
                 disabled={loading}
                 className="w-full py-2 border border-gold-500/40 text-gold-300 font-semibold rounded-lg hover:bg-gold-400/10 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors text-sm"
               >
-                <LogIn className="size-4" /> Demo: Student Login
+                <LogIn className="size-4" /> Demo: Teacher Login
               </button>
 
               <div className="text-xs text-ivory-100/40 bg-navy-900 p-3 rounded-lg space-y-1">
-                <p className="font-semibold text-ivory-100/60">Teacher access:</p>
-                <p>roman_sir / Roman@123</p>
+                <p className="font-semibold text-ivory-100/60">Demo accounts:</p>
+                <p>Teacher: roman_sir / Roman@123</p>
+                <p>Student: Create via teacher dashboard</p>
               </div>
 
               <div className="text-center">

@@ -1,0 +1,16 @@
+import { NextResponse } from "next/server";
+import { getTeacherDashboard } from "@/lib/academy";
+import { assertRole } from "@/lib/auth";
+
+export async function GET(request: Request) {
+  try {
+    assertRole(request, ["teacher"]);
+  } catch (error) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
+  const url = new URL(request.url);
+  const batch = url.searchParams.get("batch") ?? undefined;
+  const dashboard = await getTeacherDashboard(batch);
+  return NextResponse.json(dashboard);
+}

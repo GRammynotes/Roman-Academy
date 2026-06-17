@@ -1,0 +1,18 @@
+# .replit
+run = "pnpm run dev"
+
+[packager]
+# Use pnpm instead of npm/yarn
+packageManager = "pnpm"
+
+[env]
+# Environment variables can go here
+NODE_ENV = "development"
+
+[interpreter]
+# Use Node.js runtime
+command = ["node"]
+
+[language]
+# Tell Replit this is a Node.js project
+language = "nodejs"

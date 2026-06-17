@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, KeyRound, MessageSquareText, ShieldCheck, Loader2, GraduationCap, AlertTriangle } from "lucide-react";
+import { CheckCircle2, KeyRound, MessageSquareText, ShieldCheck, Loader2 } from "lucide-react";
 
 type ProviderStatus = { name: string; label: string; configured: boolean; maskedKey: string; model: string };
 type SettingsState = {
@@ -17,9 +17,6 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<SettingsState | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [showPromoteConfirm, setShowPromoteConfirm] = useState(false);
-  const [isPromoting, setIsPromoting] = useState(false);
-  const [promoteResult, setPromoteResult] = useState<{ promoted: number; archived: number; newBatch: string } | null>(null);
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}api/teacher/settings`)
@@ -45,24 +42,6 @@ export default function SettingsPage() {
       setMessage("Failed to save settings.");
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handlePromoteBatch = async () => {
-    setIsPromoting(true);
-    setShowPromoteConfirm(false);
-    try {
-      const res = await fetch(`${import.meta.env.BASE_URL}api/teacher/promote-batch`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to promote batch");
-      setPromoteResult(data);
-    } catch (err: any) {
-      setMessage(`Promotion failed: ${err.message}`);
-    } finally {
-      setIsPromoting(false);
     }
   };
 
@@ -154,61 +133,6 @@ export default function SettingsPage() {
             </button>
           </>
         )}
-
-        <Card className="border-red-800/40">
-          <CardHeader className="border-b border-red-800/30">
-            <CardTitle className="text-white flex items-center gap-2">
-              <GraduationCap className="size-4 text-red-400" /> Batch Lifecycle
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 space-y-4">
-            <p className="text-sm text-ivory-100/70">
-              Promote all 11th Science students to 12th, and archive the current 12th batch (marks them as graduated).
-              Rank history is reset for all affected students.
-            </p>
-
-            {promoteResult && (
-              <div className="p-3 rounded-lg border border-emerald-700/40 bg-emerald-900/20 text-sm text-emerald-300 space-y-1">
-                <p className="font-semibold">Promotion complete!</p>
-                <p>• {promoteResult.promoted} student(s) moved to <strong>{promoteResult.newBatch}</strong></p>
-                <p>• {promoteResult.archived} student(s) archived (graduated)</p>
-              </div>
-            )}
-
-            {!showPromoteConfirm ? (
-              <button
-                onClick={() => setShowPromoteConfirm(true)}
-                disabled={isPromoting}
-                className="px-5 py-2.5 border border-red-700/50 text-red-400 font-semibold rounded-lg hover:bg-red-900/20 disabled:opacity-50 flex items-center gap-2 transition-colors text-sm"
-              >
-                <GraduationCap className="size-4" /> Promote Batch
-              </button>
-            ) : (
-              <div className="space-y-3 p-4 rounded-lg border border-red-700/40 bg-red-900/10">
-                <div className="flex items-start gap-2 text-red-300 text-sm">
-                  <AlertTriangle className="size-4 shrink-0 mt-0.5" />
-                  <span>This will archive all current 12th students and promote 11th students to 12th. This action cannot be undone.</span>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={handlePromoteBatch}
-                    disabled={isPromoting}
-                    className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-500 disabled:opacity-50 flex items-center gap-2 text-sm transition-colors"
-                  >
-                    {isPromoting ? <Loader2 className="size-4 animate-spin" /> : <GraduationCap className="size-4" />}
-                    Yes, Promote Batch
-                  </button>
-                  <button
-                    onClick={() => setShowPromoteConfirm(false)}
-                    className="px-4 py-2 border border-gold-500/30 text-ivory-100/70 rounded-lg hover:bg-white/5 text-sm transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </AppShell>
   );
