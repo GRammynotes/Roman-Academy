@@ -12,12 +12,14 @@ import {
   whatsappDraftsTable,
   aiSettingsTable,
   testChaptersTable,
+  chaptersTable,
 } from "@workspace/db";
-import { eq, and, desc, sql, ilike } from "drizzle-orm";
+import { eq, and, desc, sql, ilike, asc } from "drizzle-orm";
 import * as bcryptjs from "bcryptjs";
 import crypto from "crypto";
 import { logger } from "../lib/logger";
 import { sendPushNotification } from "./push";
+import { uploadMarksLimiter, whatsappSendLimiter, studentMutationLimiter } from "../lib/rate-limits";
 
 const router = Router();
 
@@ -59,6 +61,22 @@ function parseStream(input: string): "SCIENCE_PCM" | "COMMERCE_ADDON" | "NEET_AD
   if (input === "NEET_ADDON" || input.toLowerCase().includes("neet")) return "NEET_ADDON";
   return "SCIENCE_PCM";
 }
+
+function aiNote(pct: number): string {
+  if (pct >= 85) return "Outstanding! Excellent command over the subject. Maintain consistency and push for 90%+.";
+  if (pct >= 75) return "Very good performance. Minor errors cost marks — review and aim higher next time.";
+  if (pct >= 65) return "Good effort. Concept clarity is improving. Work on problem-solving speed and accuracy.";
+  if (pct >= 55) return "Needs improvement. Gaps in fundamentals identified. Schedule a revision session with Roman sir.";
+  return "Below target. Immediate action needed. Daily practice and concept revision is strongly recommended.";
+}
+
+function teacherNote(pct: number): string {
+  if (pct >= 75) return "Keep it up! Very consistent performance.";
+  if (pct >= 65) return "Good work. Focus more on application problems.";
+  return "Please revise the covered chapters and attempt more practice sets.";
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────
 
 router.get("/teacher/dashboard", requireRole(["teacher", "admin"]), async (req: any, res) => {
   try {
@@ -142,9 +160,16 @@ router.get("/teacher/dashboard", requireRole(["teacher", "admin"]), async (req: 
   }
 });
 
+// ── Students ──────────────────────────────────────────────────────────────
+
 router.get("/teacher/students", requireRole(["teacher", "admin"]), async (req: any, res) => {
   try {
     const batchFilter = req.query.batch as string | undefined;
+    const q = req.query.q as string | undefined;
+
+    const filters: any[] = [eq(studentsTable.archived, false)];
+    if (batchFilter) filters.push(eq(studentsTable.batchType, batchFilter));
+    if (q?.trim()) filters.push(ilike(studentsTable.fullName, `%${q.trim()}%`));
 
     const students = await db.select({
       id: studentsTable.id,
@@ -153,18 +178,15 @@ router.get("/teacher/students", requireRole(["teacher", "admin"]), async (req: a
       stream: studentsTable.stream,
       batchType: studentsTable.batchType,
       whatsappContact: studentsTable.whatsappContact,
+      parentContact: studentsTable.parentContact,
       archived: studentsTable.archived,
       notes: studentsTable.notes,
       joinedDate: studentsTable.joinedDate,
       username: usersTable.username,
+      isDemo: usersTable.isDemo,
     }).from(studentsTable)
       .leftJoin(usersTable, eq(studentsTable.userId, usersTable.id))
-      .where(
-        and(
-          eq(studentsTable.archived, false),
-          ...(batchFilter ? [eq(studentsTable.batchType, batchFilter)] : [])
-        )
-      );
+      .where(and(...filters));
 
     return res.json(students);
   } catch (err) {
@@ -173,7 +195,82 @@ router.get("/teacher/students", requireRole(["teacher", "admin"]), async (req: a
   }
 });
 
-router.post("/students", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/teacher/students/:id/analytics", requireRole(["teacher", "admin"]), async (req: any, res) => {
+  try {
+    const { id } = req.params;
+    const student = await db.select({
+      id: studentsTable.id,
+      fullName: studentsTable.fullName,
+      batchType: studentsTable.batchType,
+      classLevel: studentsTable.classLevel,
+      stream: studentsTable.stream,
+      whatsappContact: studentsTable.whatsappContact,
+      parentContact: studentsTable.parentContact,
+      joinedDate: studentsTable.joinedDate,
+      notes: studentsTable.notes,
+      username: usersTable.username,
+      isDemo: usersTable.isDemo,
+    }).from(studentsTable)
+      .leftJoin(usersTable, eq(studentsTable.userId, usersTable.id))
+      .where(eq(studentsTable.id, id))
+      .limit(1);
+
+    if (!student[0]) return res.status(404).json({ error: "Student not found" });
+
+    const results = await db.select({
+      id: studentTestResultsTable.id,
+      testId: studentTestResultsTable.testId,
+      testName: testsTable.testName,
+      testType: testsTable.testType,
+      date: testsTable.date,
+      totalMarks: testsTable.totalMarks,
+      totalScored: studentTestResultsTable.totalScored,
+      percentage: studentTestResultsTable.percentage,
+      rank: studentTestResultsTable.rank,
+      teacherNote: studentTestResultsTable.teacherNote,
+    }).from(studentTestResultsTable)
+      .innerJoin(testsTable, eq(studentTestResultsTable.testId, testsTable.id))
+      .where(eq(studentTestResultsTable.studentId, id))
+      .orderBy(asc(testsTable.date));
+
+    const rankData = await db.select().from(rankHistoryTable)
+      .where(and(eq(rankHistoryTable.studentId, id), eq(rankHistoryTable.scope, "overall")))
+      .orderBy(desc(rankHistoryTable.createdAt))
+      .limit(1);
+
+    const chapters = await db.select({
+      chapterName: studentChaptersTable.chapterName,
+      status: studentChaptersTable.status,
+    }).from(studentChaptersTable).where(eq(studentChaptersTable.studentId, id));
+
+    const avg = results.length > 0
+      ? Math.round(results.reduce((s, r) => s + r.percentage, 0) / results.length)
+      : 0;
+
+    const completedChapters = chapters.filter(c => c.status === "COMPLETED").length;
+    const totalChapters = chapters.length;
+
+    return res.json({
+      student: student[0],
+      rank: rankData[0]?.rank ?? null,
+      average: avg,
+      lastTestPct: results[results.length - 1]?.percentage ?? null,
+      completedChapters,
+      totalChapters,
+      syllabusProgress: totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0,
+      results: results.map(r => ({
+        ...r,
+        date: r.date ? new Date(r.date).toLocaleDateString("en-IN") : "N/A",
+      })),
+      chapters,
+    });
+  } catch (err) {
+    logger.error({ err }, "Student analytics error");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/students", requireRole(["teacher", "admin"]), studentMutationLimiter, async (req: any, res) => {
   try {
     const body = req.body;
     const fullName = String(body.fullName || "").trim();
@@ -226,6 +323,67 @@ router.post("/students", requireRole(["teacher", "admin"]), async (req: any, res
   }
 });
 
+router.patch("/students/:id", requireRole(["teacher", "admin"]), studentMutationLimiter, async (req: any, res) => {
+  try {
+    const { id } = req.params;
+    const { fullName, whatsappContact, parentContact, notes } = req.body;
+
+    await db.update(studentsTable)
+      .set({
+        ...(fullName ? { fullName } : {}),
+        ...(whatsappContact !== undefined ? { whatsappContact } : {}),
+        ...(parentContact !== undefined ? { parentContact } : {}),
+        ...(notes !== undefined ? { notes } : {}),
+      })
+      .where(eq(studentsTable.id, id));
+
+    return res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Update student error");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.delete("/students/:id", requireRole(["teacher", "admin"]), studentMutationLimiter, async (req: any, res) => {
+  try {
+    const { id } = req.params;
+    await db.update(studentsTable).set({ archived: true }).where(eq(studentsTable.id, id));
+    return res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Archive student error");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── Promote Batch ─────────────────────────────────────────────────────────
+
+router.post("/teacher/promote-batch", requireRole(["teacher", "admin"]), async (req: any, res) => {
+  try {
+    const { batchType } = req.body;
+    if (!batchType) return res.status(400).json({ error: "batchType is required" });
+
+    const year = new Date().getFullYear();
+    const students = await db.select({ id: studentsTable.id })
+      .from(studentsTable)
+      .where(and(eq(studentsTable.batchType, batchType), eq(studentsTable.archived, false)));
+
+    if (students.length === 0) return res.status(404).json({ error: "No students found in this batch" });
+
+    for (const s of students) {
+      await db.update(studentsTable)
+        .set({ promoted: true, graduationYear: year })
+        .where(eq(studentsTable.id, s.id));
+    }
+
+    return res.json({ success: true, promoted: students.length });
+  } catch (err) {
+    logger.error({ err }, "Promote batch error");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── Leaderboard ───────────────────────────────────────────────────────────
+
 router.get("/teacher/leaderboard", requireRole(["teacher", "student", "admin"]), async (req: any, res) => {
   try {
     const scope = String(req.query.scope || "weekly");
@@ -257,6 +415,8 @@ router.get("/teacher/leaderboard", requireRole(["teacher", "student", "admin"]),
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// ── Schedule ──────────────────────────────────────────────────────────────
 
 router.get("/teacher/schedule", requireRole(["teacher", "admin"]), async (req: any, res) => {
   try {
@@ -332,6 +492,8 @@ router.post("/teacher/schedule", requireRole(["teacher", "admin"]), async (req: 
   }
 });
 
+// ── Settings ──────────────────────────────────────────────────────────────
+
 router.get("/teacher/settings", requireRole(["teacher", "admin"]), async (req: any, res) => {
   try {
     const settings = await db.select().from(aiSettingsTable).limit(1);
@@ -398,11 +560,14 @@ router.post("/teacher/settings", requireRole(["teacher", "admin"]), async (req: 
   }
 });
 
+// ── WhatsApp ──────────────────────────────────────────────────────────────
+
 router.get("/teacher/whatsapp", requireRole(["teacher", "admin"]), async (req: any, res) => {
   try {
     const drafts = await db.select({
       id: whatsappDraftsTable.id,
       student: studentsTable.fullName,
+      whatsappContact: studentsTable.whatsappContact,
       cadence: whatsappDraftsTable.cadence,
       status: whatsappDraftsTable.status,
       draft: whatsappDraftsTable.draft,
@@ -421,21 +586,39 @@ router.get("/teacher/whatsapp", requireRole(["teacher", "admin"]), async (req: a
   }
 });
 
-router.post("/teacher/whatsapp/send", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.post("/teacher/whatsapp/send", requireRole(["teacher", "admin"]), whatsappSendLimiter, async (req: any, res) => {
   try {
     const { id, body: draftBody } = req.body;
     if (!id) return res.status(400).json({ error: "Missing id" });
 
+    const draft = await db.select({
+      id: whatsappDraftsTable.id,
+      studentId: whatsappDraftsTable.studentId,
+      draft: whatsappDraftsTable.draft,
+      whatsappContact: studentsTable.whatsappContact,
+    }).from(whatsappDraftsTable)
+      .innerJoin(studentsTable, eq(whatsappDraftsTable.studentId, studentsTable.id))
+      .where(eq(whatsappDraftsTable.id, id))
+      .limit(1);
+
+    if (!draft[0]) return res.status(404).json({ error: "Draft not found" });
+
     await db.update(whatsappDraftsTable)
-      .set({ status: "SENT", draft: draftBody, updatedAt: new Date() })
+      .set({ status: "SENT", draft: draftBody || draft[0].draft, updatedAt: new Date() })
       .where(eq(whatsappDraftsTable.id, id));
 
-    return res.json({ success: true });
+    const phone = draft[0].whatsappContact?.replace(/\D/g, "");
+    const message = encodeURIComponent(draftBody || draft[0].draft);
+    const waLink = phone ? `https://wa.me/${phone}?text=${message}` : null;
+
+    return res.json({ success: true, waLink });
   } catch (err) {
     logger.error({ err }, "Send WhatsApp error");
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// ── Syllabus ──────────────────────────────────────────────────────────────
 
 router.get("/teacher/syllabus", requireRole(["teacher", "admin"]), async (req: any, res) => {
   try {
@@ -457,84 +640,229 @@ router.get("/teacher/syllabus", requireRole(["teacher", "admin"]), async (req: a
   }
 });
 
-router.post("/teacher/upload-marks", requireRole(["teacher", "admin"]), async (req: any, res) => {
+// ── Upload Marks (REWORKED) ───────────────────────────────────────────────
+
+router.post("/teacher/upload-marks", requireRole(["teacher", "admin"]), uploadMarksLimiter, async (req: any, res) => {
   try {
-    const { text } = req.body;
+    const { text, testType, totalMarks: totalMarksInput, chapters: chaptersInput, batchType: batchFilter } = req.body;
     if (!text) return res.status(400).json({ error: "No text provided" });
+    if (!testType) return res.status(400).json({ error: "Test type is required" });
+    if (!totalMarksInput || isNaN(Number(totalMarksInput))) return res.status(400).json({ error: "Total marks is required" });
 
+    const totalMarks = Number(totalMarksInput);
     const lines = text.trim().split(/\r?\n/).map((l: string) => l.trim()).filter(Boolean);
-    if (lines.length < 2) return res.status(400).json({ error: "Invalid format" });
+    if (lines.length < 1) return res.status(400).json({ error: "At least one student result required" });
 
-    const testName = lines[0];
-    const results: Array<{ name: string; score: number }> = [];
-
-    for (const line of lines.slice(1)) {
+    const parsedResults: Array<{ name: string; score: number }> = [];
+    for (const line of lines) {
       const match = line.match(/^(.+?)\s+(\d+(?:\.\d+)?)$/);
       if (match) {
-        results.push({ name: match[1].trim(), score: parseFloat(match[2]) });
+        parsedResults.push({ name: match[1].trim(), score: parseFloat(match[2]) });
       }
     }
 
-    const maxMarks = results.length > 0 ? Math.max(...results.map(r => r.score)) : 100;
+    if (parsedResults.length === 0) return res.status(400).json({ error: "No valid entries found. Use format: Name Score (e.g. Sonal 72)" });
+
+    // Auto-generate test name from type + date
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+    const typeLabel: Record<string, string> = {
+      WEEKLY_CHAPTER: "Weekly Chapter Test",
+      MONTHLY: "Monthly Test",
+      QUARTERLY: "Quarterly Test",
+      FULL_LENGTH_MOCK: "Full Length Mock",
+      REVISION_TEST: "Revision Test",
+    };
+    const testName = `${typeLabel[testType] || testType} — ${dateStr}`;
+
+    // Detect classLevel from batch
+    let classLevel: "ELEVEN" | "TWELVE" = "TWELVE";
+    let stream: "SCIENCE_PCM" = "SCIENCE_PCM";
+    if (batchFilter) {
+      const batch = await db.select().from(batchesTable).where(eq(batchesTable.name, batchFilter)).limit(1);
+      if (batch[0]) classLevel = batch[0].classLevel;
+    }
 
     const testId = crypto.randomUUID();
     await db.insert(testsTable).values({
       id: testId,
       testName,
-      testType: "WEEKLY_CHAPTER",
-      classLevel: "TWELVE",
-      stream: "SCIENCE_PCM",
-      date: new Date(),
-      totalMarks: maxMarks,
+      testType: testType as any,
+      classLevel,
+      stream,
+      date: now,
+      totalMarks,
     });
 
-    const processed: Array<{ name: string; score: number; percentage: number }> = [];
-    for (const result of results) {
+    // Link chapters to test + mark them COMPLETED in student records
+    const chapterList: string[] = Array.isArray(chaptersInput) ? chaptersInput : [];
+    for (const chName of chapterList) {
+      await db.insert(testChaptersTable).values({
+        id: crypto.randomUUID(),
+        testId,
+        chapterName: chName,
+      });
+    }
+
+    // Process results and compute ranks
+    const processed: Array<{ name: string; score: number; percentage: number; rank?: number; studentId?: string }> = [];
+    const skippedNames: string[] = [];
+
+    for (const result of parsedResults) {
       const students = await db.select().from(studentsTable)
-        .where(ilike(studentsTable.fullName, `%${result.name}%`))
+        .where(and(
+          ilike(studentsTable.fullName, `%${result.name}%`),
+          eq(studentsTable.archived, false),
+          ...(batchFilter ? [eq(studentsTable.batchType, batchFilter)] : [])
+        ))
         .limit(1);
       const student = students[0];
       if (student) {
-        const percentage = Math.round((result.score / maxMarks) * 100);
-        await db.insert(studentTestResultsTable).values({
-          id: crypto.randomUUID(),
-          studentId: student.id,
-          testId,
-          totalScored: result.score,
-          percentage,
-        });
-        processed.push({ name: result.name, score: result.score, percentage });
+        const percentage = Math.round((result.score / totalMarks) * 100 * 10) / 10;
+        processed.push({ name: result.name, score: result.score, percentage, studentId: student.id });
+      } else {
+        skippedNames.push(result.name);
       }
     }
 
-    if (processed.length > 0) {
-      const processedStudentIds = processed.map(p => p.name);
-      const notifyStudents = await db.select({
-        pushToken: usersTable.pushToken,
-      }).from(studentsTable)
-        .innerJoin(usersTable, eq(studentsTable.userId, usersTable.id))
-        .where(
-          sql`${studentsTable.fullName} ILIKE ANY(ARRAY[${sql.join(processedStudentIds.map(n => sql`${'%' + n + '%'}`), sql`, `)}]::text[])`
-        );
+    // Sort by score desc to assign ranks
+    processed.sort((a, b) => b.score - a.score);
+    for (let i = 0; i < processed.length; i++) {
+      processed[i].rank = i + 1;
+    }
 
-      for (const { pushToken } of notifyStudents) {
-        if (pushToken) {
-          sendPushNotification(
-            pushToken,
-            "New Test Results Available",
-            `Your results for "${testName}" have been uploaded. Tap to view.`,
-            { screen: "student-tests" }
-          ).catch(() => {});
+    // Insert results with rank, teacher note, AI note, WhatsApp draft
+    const batchAvg = processed.length > 0
+      ? Math.round(processed.reduce((s, r) => s + r.percentage, 0) / processed.length * 10) / 10
+      : 0;
+
+    for (const result of processed) {
+      if (!result.studentId) continue;
+
+      const note = result.percentage >= 75 ? "Keep it up! Very consistent performance."
+        : result.percentage >= 65 ? "Good work. Focus more on application problems."
+        : "Please revise the covered chapters and attempt more practice sets.";
+      const ai = aiNote(result.percentage);
+
+      const resultId = crypto.randomUUID();
+      await db.insert(studentTestResultsTable).values({
+        id: resultId,
+        studentId: result.studentId,
+        testId,
+        totalScored: result.score,
+        percentage: result.percentage,
+        rank: result.rank,
+        teacherNote: note,
+        aiSummary: ai,
+        whatsappStatus: "DRAFT",
+      });
+
+      // Update rank history
+      const existingRank = await db.select().from(rankHistoryTable)
+        .where(and(eq(rankHistoryTable.studentId, result.studentId), eq(rankHistoryTable.scope, "overall")))
+        .orderBy(desc(rankHistoryTable.createdAt))
+        .limit(1);
+
+      const prevRank = existingRank[0]?.rank ?? null;
+      const rankMovement = prevRank !== null ? prevRank - (result.rank ?? 0) : null;
+
+      await db.insert(rankHistoryTable).values({
+        id: crypto.randomUUID(),
+        studentId: result.studentId,
+        testId,
+        scope: "overall",
+        rank: result.rank ?? 0,
+        average: batchAvg,
+        lastTest: result.percentage,
+        rankMovement,
+      });
+
+      // Mark chapters COMPLETED for this student
+      if (chapterList.length > 0) {
+        for (const chName of chapterList) {
+          await db.update(studentChaptersTable)
+            .set({ status: "COMPLETED", updatedAt: new Date() })
+            .where(and(
+              eq(studentChaptersTable.studentId, result.studentId),
+              eq(studentChaptersTable.chapterName, chName)
+            ));
+        }
+      }
+
+      // WhatsApp draft
+      const studentRec = await db.select({ fullName: studentsTable.fullName, batchType: studentsTable.batchType })
+        .from(studentsTable).where(eq(studentsTable.id, result.studentId)).limit(1);
+      if (studentRec[0]) {
+        const pct = Math.round(result.percentage);
+        const chaptersText = chapterList.length > 0 ? `\n📖 Topics: ${chapterList.join(", ")}` : "";
+        const rankText = `\n🏅 Rank: *${result.rank} / ${processed.length}*`;
+        await db.insert(whatsappDraftsTable).values({
+          id: crypto.randomUUID(),
+          studentId: result.studentId,
+          testResultId: resultId,
+          cadence: "result_uploaded",
+          status: "DRAFT",
+          batchType: studentRec[0].batchType,
+          draft: `🙏 Dear Parent,\n\n*${studentRec[0].fullName}* scored *${pct}%* in *${testName}*.${chaptersText}${rankText}\n\n📝 ${note}\n\n🤖 ${ai}\n\nFor queries, contact Roman Academy.\n\n— Roman Sir`,
+        });
+      }
+
+      // Push notification
+      const userRec = await db.select({ pushToken: usersTable.pushToken })
+        .from(studentsTable)
+        .innerJoin(usersTable, eq(studentsTable.userId, usersTable.id))
+        .where(eq(studentsTable.id, result.studentId))
+        .limit(1);
+      if (userRec[0]?.pushToken) {
+        sendPushNotification(
+          userRec[0].pushToken,
+          "New Test Results Available",
+          `Your results for "${testName}" are ready. Rank: ${result.rank}/${processed.length}`,
+          { screen: "student-tests" }
+        ).catch(() => {});
+      }
+    }
+
+    // Suggest next chapter for batch
+    let nextChapterSuggestion: string | null = null;
+    if (chapterList.length > 0 && batchFilter) {
+      const batch = await db.select().from(batchesTable).where(eq(batchesTable.name, batchFilter)).limit(1);
+      if (batch[0]) {
+        const nextChapters = await db.select().from(chaptersTable)
+          .where(and(
+            eq(chaptersTable.classLevel, classLevel),
+            eq(chaptersTable.stream, stream),
+          ))
+          .orderBy(asc(chaptersTable.orderIndex));
+
+        const doneSet = new Set(chapterList);
+        const nextCh = nextChapters.find(c => !doneSet.has(c.chapterName));
+        nextChapterSuggestion = nextCh?.chapterName ?? null;
+
+        if (nextCh) {
+          await db.update(batchesTable)
+            .set({ nextChapterId: nextCh.id, nextChapterName: nextCh.chapterName, updatedAt: new Date() })
+            .where(eq(batchesTable.id, batch[0].id));
         }
       }
     }
 
-    return res.json({ success: true, testName, processed, skipped: results.length - processed.length });
+    return res.json({
+      success: true,
+      testName,
+      processed: processed.map(p => ({ name: p.name, score: p.score, percentage: p.percentage, rank: p.rank })),
+      skipped: skippedNames.length,
+      skippedNames,
+      batchAvg,
+      nextChapter: nextChapterSuggestion,
+    });
   } catch (err) {
     logger.error({ err }, "Upload marks error");
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// ── Batches ───────────────────────────────────────────────────────────────
 
 router.get("/teacher/batches", requireRole(["teacher", "admin"]), async (req: any, res) => {
   try {

@@ -2,14 +2,14 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import {
   studentsTable,
+  usersTable,
   studentTestResultsTable,
   testsTable,
   testChaptersTable,
   studentChaptersTable,
   rankHistoryTable,
-  chaptersTable,
 } from "@workspace/db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { logger } from "../lib/logger";
 
 const router = Router();
@@ -23,11 +23,28 @@ function requireStudent(req: any, res: any, next: any) {
   next();
 }
 
+async function getStudentRow(userId: string) {
+  const rows = await db.select({
+    id: studentsTable.id,
+    fullName: studentsTable.fullName,
+    classLevel: studentsTable.classLevel,
+    stream: studentsTable.stream,
+    batchType: studentsTable.batchType,
+    whatsappContact: studentsTable.whatsappContact,
+    joinedDate: studentsTable.joinedDate,
+    isDemo: usersTable.isDemo,
+  }).from(studentsTable)
+    .innerJoin(usersTable, eq(studentsTable.userId, usersTable.id))
+    .where(eq(studentsTable.userId, userId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
 router.get("/student/profile", requireStudent, async (req: any, res) => {
   try {
-    const students = await db.select().from(studentsTable).where(eq(studentsTable.userId, req.userId)).limit(1);
-    const student = students[0];
-    if (!student) return res.status(404).json({ error: "Student not found" });
+    const row = await getStudentRow(req.userId);
+    if (!row) return res.status(404).json({ error: "Student not found" });
+    const student = row;
 
     const ranks = await db.select().from(rankHistoryTable)
       .where(eq(rankHistoryTable.studentId, student.id))
@@ -61,6 +78,7 @@ router.get("/student/profile", requireStudent, async (req: any, res) => {
       mainProgress,
       completedChapters,
       weakChapters: [],
+      isDemo: student.isDemo ?? false,
     });
   } catch (err) {
     logger.error({ err }, "Student profile error");
@@ -70,14 +88,17 @@ router.get("/student/profile", requireStudent, async (req: any, res) => {
 
 router.patch("/student/profile", requireStudent, async (req: any, res) => {
   try {
-    const students = await db.select().from(studentsTable).where(eq(studentsTable.userId, req.userId)).limit(1);
-    const student = students[0];
-    if (!student) return res.status(404).json({ error: "Student not found" });
+    const row = await getStudentRow(req.userId);
+    if (!row) return res.status(404).json({ error: "Student not found" });
+
+    if (row.isDemo) {
+      return res.status(403).json({ error: "Demo account — profile editing is disabled." });
+    }
 
     const { fullName, whatsappContact } = req.body;
     await db.update(studentsTable)
-      .set({ fullName: fullName || student.fullName, whatsappContact: whatsappContact || student.whatsappContact })
-      .where(eq(studentsTable.id, student.id));
+      .set({ fullName: fullName || row.fullName, whatsappContact: whatsappContact || row.whatsappContact })
+      .where(eq(studentsTable.id, row.id));
 
     return res.json({ success: true });
   } catch (err) {

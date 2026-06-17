@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, timestamp, integer, real, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, boolean, timestamp, integer, real, pgEnum, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -15,6 +15,7 @@ export const usersTable = pgTable("users", {
   username: text("username").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   firstLogin: boolean("first_login").default(true),
+  isDemo: boolean("is_demo").default(false),
   pushToken: text("push_token"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -27,6 +28,8 @@ export const batchesTable = pgTable("batches", {
   stream: streamEnum("stream").notNull(),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date"),
+  nextChapterId: text("next_chapter_id"),
+  nextChapterName: text("next_chapter_name"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -44,8 +47,12 @@ export const studentsTable = pgTable("students", {
   parentContact: text("parent_contact"),
   catchUpMode: boolean("catch_up_mode").default(false),
   archived: boolean("archived").default(false),
+  promoted: boolean("promoted").default(false),
+  graduationYear: integer("graduation_year"),
   notes: text("notes"),
-});
+}, (t) => [
+  index("idx_students_archived_batch").on(t.archived, t.batchType),
+]);
 
 export const testsTable = pgTable("tests", {
   id: text("id").primaryKey().notNull(),
@@ -77,7 +84,9 @@ export const studentTestResultsTable = pgTable("student_test_results", {
   aiSummary: text("ai_summary"),
   whatsappStatus: draftStatusEnum("whatsapp_status").default("DRAFT"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_str_student_test").on(t.studentId, t.testId),
+]);
 
 export const rankHistoryTable = pgTable("rank_history", {
   id: text("id").primaryKey().notNull(),
@@ -89,7 +98,9 @@ export const rankHistoryTable = pgTable("rank_history", {
   lastTest: real("last_test"),
   rankMovement: integer("rank_movement"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [
+  index("idx_rank_history_student_scope").on(t.studentId, t.scope),
+]);
 
 export const chaptersTable = pgTable("chapters", {
   id: text("id").primaryKey().notNull(),

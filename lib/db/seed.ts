@@ -9,6 +9,8 @@ import * as bcryptjs from "bcryptjs";
 import { randomUUID } from "crypto";
 
 const TEACHER_ID = "f77cf0ed-8ac3-4e83-8f5c-603b56e52b34";
+const KUNAL_ID   = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+const KUNAL_STUDENT_ID = "b2c3d4e5-f6a7-8901-bcde-f12345678901";
 
 function daysAgo(n: number) { const d = new Date(); d.setDate(d.getDate() - n); return d; }
 function daysFromNow(n: number) { const d = new Date(); d.setDate(d.getDate() + n); return d; }
@@ -57,8 +59,10 @@ async function ensureBatch(name: string, classLevel: "ELEVEN" | "TWELVE", stream
 }
 
 async function ensureStudent(
+  id: string | null,
   fullName: string, phone: string, parentPhone: string,
-  classLevel: "ELEVEN" | "TWELVE", stream: "SCIENCE_PCM", batchType: string, batchId: string, joinedDate: Date
+  classLevel: "ELEVEN" | "TWELVE", stream: "SCIENCE_PCM", batchType: string, batchId: string, joinedDate: Date,
+  isDemo = false
 ): Promise<{ userId: string; studentId: string; username: string }> {
   const year = "2026";
   const username = fullName.toLowerCase().replace(/\s+/g, ".").replace(/[^a-z.]/g, "") + "." + year;
@@ -69,7 +73,7 @@ async function ensureStudent(
     if (existingStudent.length > 0) {
       return { userId: existingUser[0].id, studentId: existingStudent[0].id, username };
     }
-    const studentId = randomUUID();
+    const studentId = id || randomUUID();
     await db.insert(studentsTable).values({
       id: studentId, userId: existingUser[0].id, fullName, classLevel, stream, batchType, batchId, joinedDate, whatsappContact: phone, parentContact: parentPhone,
     });
@@ -77,9 +81,9 @@ async function ensureStudent(
   }
 
   const hash = await bcryptjs.hash("student@123", 10);
-  const userId = randomUUID();
-  const studentId = randomUUID();
-  await db.insert(usersTable).values({ id: userId, username, passwordHash: hash, role: "STUDENT" });
+  const userId = id === KUNAL_STUDENT_ID ? KUNAL_ID : randomUUID();
+  const studentId = id || randomUUID();
+  await db.insert(usersTable).values({ id: userId, username, passwordHash: hash, role: "STUDENT", isDemo });
   await db.insert(studentsTable).values({
     id: studentId, userId, fullName, classLevel, stream, batchType, batchId, joinedDate, whatsappContact: phone, parentContact: parentPhone,
   });
@@ -110,7 +114,7 @@ async function ensureChapters(chapters: Array<{ name: string; subject: string; c
 }
 
 async function seed() {
-  console.log("\n🌱 Seeding Roman Academy database...\n");
+  console.log("\n🌱 Seeding Roman Academy database (REAL students)...\n");
 
   // ── Teacher ──────────────────────────────────────────────────────────────
   console.log("👤 Teacher");
@@ -128,81 +132,50 @@ async function seed() {
   const batch11Id = await ensureBatch("11th Science 2026", "ELEVEN", "SCIENCE_PCM", new Date("2025-06-01"));
   const batch12Id = await ensureBatch("12th Science 2026", "TWELVE", "SCIENCE_PCM", new Date("2024-06-01"));
 
-  // ── 11th Students (25) ───────────────────────────────────────────────────
-  console.log("\n🎓 11th Science students (25)");
-  const eleventh = [
-    { name: "Aarav Sharma",      phone: "919876543210", parent: "919876543110" },
-    { name: "Priya Patel",       phone: "919876543211", parent: "919876543111" },
-    { name: "Rohit Desai",       phone: "919876543212", parent: "919876543112" },
-    { name: "Sneha Kulkarni",    phone: "919876543213", parent: "919876543113" },
-    { name: "Yash Joshi",        phone: "919876543214", parent: "919876543114" },
-    { name: "Anjali Nair",       phone: "919876543215", parent: "919876543115" },
-    { name: "Vikram Mehta",      phone: "919876543216", parent: "919876543116" },
-    { name: "Pooja Reddy",       phone: "919876543217", parent: "919876543117" },
-    { name: "Arjun Iyer",        phone: "919876543218", parent: "919876543118" },
-    { name: "Kavya Singh",       phone: "919876543219", parent: "919876543119" },
-    { name: "Harsh Verma",       phone: "919876543220", parent: "919876543120" },
-    { name: "Rutuja Bhosale",    phone: "919876543221", parent: "919876543121" },
-    { name: "Siddharth Patil",   phone: "919876543222", parent: "919876543122" },
-    { name: "Ananya Gupta",      phone: "919876543223", parent: "919876543123" },
-    { name: "Rahul Gaikwad",     phone: "919876543224", parent: "919876543124" },
-    { name: "Divya Agarwal",     phone: "919876543225", parent: "919876543125" },
-    { name: "Nikhil Chavan",     phone: "919876543226", parent: "919876543126" },
-    { name: "Shruti Rao",        phone: "919876543227", parent: "919876543127" },
-    { name: "Omkar Jadhav",      phone: "919876543228", parent: "919876543128" },
-    { name: "Pallavi More",      phone: "919876543229", parent: "919876543129" },
-    { name: "Aditya Wagh",       phone: "919876543230", parent: "919876543130" },
-    { name: "Nisha Sawant",      phone: "919876543231", parent: "919876543131" },
-    { name: "Pranav Lokhande",   phone: "919876543232", parent: "919876543132" },
-    { name: "Megha Shinde",      phone: "919876543233", parent: "919876543133" },
-    { name: "Deepak Mhatre",     phone: "919876543234", parent: "919876543134" },
-  ];
-  const skills11 = [0.82, 0.71, 0.88, 0.65, 0.77, 0.91, 0.63, 0.85, 0.73, 0.79, 0.68, 0.86, 0.74, 0.92, 0.61, 0.83, 0.70, 0.87, 0.66, 0.80, 0.75, 0.58, 0.90, 0.72, 0.67];
-
-  const eleventh_students: Array<{ userId: string; studentId: string; username: string; name: string; skill: number }> = [];
-  for (let i = 0; i < eleventh.length; i++) {
-    const s = await ensureStudent(eleventh[i].name, eleventh[i].phone, eleventh[i].parent, "ELEVEN", "SCIENCE_PCM", "11th Science 2026", batch11Id, daysAgo(60 + i));
-    eleventh_students.push({ ...s, name: eleventh[i].name, skill: skillOf(i, skills11) });
-  }
-  console.log(`  ✓ ${eleventh_students.length} students ready`);
-
-  // ── 12th Students (25) ───────────────────────────────────────────────────
-  console.log("\n🎓 12th Science students (25)");
+  // ── 12th Students (12 real + 1 demo Kunal) ───────────────────────────────
+  console.log("\n🎓 12th Science 2026 (real students)");
   const twelfth = [
-    { name: "Kunal Datkhile",    phone: "919172765002", parent: "919172765001" },
-    { name: "Sonal Pawar",       phone: "919876543301", parent: "919876543401" },
-    { name: "Prachi Kulkarni",   phone: "919876543302", parent: "919876543402" },
-    { name: "Aditya Shinde",     phone: "919876543303", parent: "919876543403" },
-    { name: "Ritik Sawant",      phone: "919876543304", parent: "919876543404" },
-    { name: "Neha Joshi",        phone: "919876543305", parent: "919876543405" },
-    { name: "Rajan Patil",       phone: "919876543306", parent: "919876543406" },
-    { name: "Swati Desai",       phone: "919876543307", parent: "919876543407" },
-    { name: "Amol Bhosale",      phone: "919876543308", parent: "919876543408" },
-    { name: "Pooja Sharma",      phone: "919876543309", parent: "919876543409" },
-    { name: "Karthik Nair",      phone: "919876543310", parent: "919876543410" },
-    { name: "Rishab Mehta",      phone: "919876543311", parent: "919876543411" },
-    { name: "Gauri Rao",         phone: "919876543312", parent: "919876543412" },
-    { name: "Vishal Gaikwad",    phone: "919876543313", parent: "919876543413" },
-    { name: "Ankita Iyer",       phone: "919876543314", parent: "919876543414" },
-    { name: "Suraj Verma",       phone: "919876543315", parent: "919876543415" },
-    { name: "Preeti Gupta",      phone: "919876543316", parent: "919876543416" },
-    { name: "Akash Reddy",       phone: "919876543317", parent: "919876543417" },
-    { name: "Mansi Singh",       phone: "919876543318", parent: "919876543418" },
-    { name: "Tejas Patel",       phone: "919876543319", parent: "919876543419" },
-    { name: "Simran Chavan",     phone: "919876543320", parent: "919876543420" },
-    { name: "Rohan More",        phone: "919876543321", parent: "919876543421" },
-    { name: "Priyanka Wagh",     phone: "919876543322", parent: "919876543422" },
-    { name: "Sameer Lokhande",   phone: "919876543323", parent: "919876543423" },
-    { name: "Deepali Jadhav",    phone: "919876543324", parent: "919876543424" },
+    { name: "Kunal Datkhile",      phone: "919172765002", parent: "919172765001", demo: true,  sid: KUNAL_STUDENT_ID },
+    { name: "Rujula Khamkar",      phone: "919324390639", parent: "919324390630", demo: false, sid: null },
+    { name: "Shraddha Kamble",     phone: "919326109449", parent: "919326109440", demo: false, sid: null },
+    { name: "Tanashree Gaikwad",   phone: "918080284547", parent: "918080284540", demo: false, sid: null },
+    { name: "Prachi Kamble",       phone: "919152692490", parent: "919152692491", demo: false, sid: null },
+    { name: "Sayali Gupta",        phone: "919136452648", parent: "919136452640", demo: false, sid: null },
+    { name: "Harshala Rajiwade",   phone: "919594165193", parent: "919594165190", demo: false, sid: null },
+    { name: "Aditya Dhurve",       phone: "917738198065", parent: "917738198060", demo: false, sid: null },
+    { name: "Suraj Mote",          phone: "918850526185", parent: "918850526180", demo: false, sid: null },
+    { name: "Manasvi Nehe",        phone: "918850993632", parent: "918850993630", demo: false, sid: null },
+    { name: "Ankit Pal",           phone: "919136743040", parent: "919136743041", demo: false, sid: null },
+    { name: "Sonal Shingare",      phone: "919321225243", parent: "919321225240", demo: false, sid: null },
+    { name: "Ritik Mishra",        phone: "919919633795", parent: "919919633790", demo: false, sid: null },
   ];
-  const skills12 = [0.73, 0.86, 0.92, 0.68, 0.77, 0.84, 0.65, 0.89, 0.71, 0.80, 0.94, 0.63, 0.87, 0.75, 0.91, 0.69, 0.82, 0.78, 0.61, 0.88, 0.74, 0.83, 0.67, 0.90, 0.76];
+  const skills12 = [0.73, 0.86, 0.79, 0.68, 0.84, 0.77, 0.91, 0.65, 0.88, 0.72, 0.80, 0.85, 0.69];
 
   const twelfth_students: Array<{ userId: string; studentId: string; username: string; name: string; skill: number }> = [];
   for (let i = 0; i < twelfth.length; i++) {
-    const s = await ensureStudent(twelfth[i].name, twelfth[i].phone, twelfth[i].parent, "TWELVE", "SCIENCE_PCM", "12th Science 2026", batch12Id, daysAgo(200 + i));
+    const s = await ensureStudent(twelfth[i].sid, twelfth[i].name, twelfth[i].phone, twelfth[i].parent, "TWELVE", "SCIENCE_PCM", "12th Science 2026", batch12Id, daysAgo(200 + i), twelfth[i].demo);
     twelfth_students.push({ ...s, name: twelfth[i].name, skill: skillOf(i, skills12) });
   }
   console.log(`  ✓ ${twelfth_students.length} students ready`);
+
+  // ── 11th Students (6 real) ───────────────────────────────────────────────
+  console.log("\n🎓 11th Science 2026 (real students)");
+  const eleventh = [
+    { name: "Manasvi Mankar",      phone: "919004972063", parent: "919004972060" },
+    { name: "Vedika Talekar",      phone: "919326496626", parent: "919326496620" },
+    { name: "Samruddhi Ghodekar",  phone: "919167577818", parent: "919167577810" },
+    { name: "Shravani Shinde",     phone: "919004736613", parent: "919004736610" },
+    { name: "Harshad Kadam",       phone: "919702051592", parent: "919702051590" },
+    { name: "Nisa Bankar",         phone: "917039779068", parent: "917039779060" },
+  ];
+  const skills11 = [0.82, 0.71, 0.88, 0.65, 0.77, 0.91];
+
+  const eleventh_students: Array<{ userId: string; studentId: string; username: string; name: string; skill: number }> = [];
+  for (let i = 0; i < eleventh.length; i++) {
+    const s = await ensureStudent(null, eleventh[i].name, eleventh[i].phone, eleventh[i].parent, "ELEVEN", "SCIENCE_PCM", "11th Science 2026", batch11Id, daysAgo(60 + i));
+    eleventh_students.push({ ...s, name: eleventh[i].name, skill: skillOf(i, skills11) });
+  }
+  console.log(`  ✓ ${eleventh_students.length} students ready`);
 
   // ── Chapters ─────────────────────────────────────────────────────────────
   console.log("\n📖 Chapters");
@@ -259,11 +232,10 @@ async function seed() {
   const test11_2 = await ensureTest("Weekly Test 2 - Work Energy Power", "WEEKLY_CHAPTER", "ELEVEN", "SCIENCE_PCM", daysAgo(21), 100);
   const test11_3 = await ensureTest("Monthly Test - November",           "MONTHLY",         "ELEVEN", "SCIENCE_PCM", daysAgo(7),  200);
 
-  const test12_1 = await ensureTest("Weekly Test 1 - Electrostatics",   "WEEKLY_CHAPTER", "TWELVE", "SCIENCE_PCM", daysAgo(35), 100);
-  const test12_2 = await ensureTest("Weekly Test 2 - Current Electricity","WEEKLY_CHAPTER","TWELVE", "SCIENCE_PCM", daysAgo(21), 100);
-  const test12_3 = await ensureTest("Monthly Test - November",           "MONTHLY",         "TWELVE", "SCIENCE_PCM", daysAgo(7),  200);
+  const test12_1 = await ensureTest("Weekly Test 1 - Electrostatics",    "WEEKLY_CHAPTER", "TWELVE", "SCIENCE_PCM", daysAgo(35), 100);
+  const test12_2 = await ensureTest("Weekly Test 2 - Current Electricity","WEEKLY_CHAPTER", "TWELVE", "SCIENCE_PCM", daysAgo(21), 100);
+  const test12_3 = await ensureTest("Monthly Test - November",            "MONTHLY",         "TWELVE", "SCIENCE_PCM", daysAgo(7),  200);
 
-  // Test chapters
   async function addTestChapters(testId: string, chapters: Array<{ name: string; subject: string }>) {
     for (const ch of chapters) {
       const existing = await db.select().from(testChaptersTable).where(and(eq(testChaptersTable.testId, testId), eq(testChaptersTable.chapterName, ch.name))).limit(1);
@@ -313,7 +285,6 @@ async function seed() {
     const scores = [r1?.pct ?? 0, r2?.pct ?? 0, r3?.pct ?? 0].filter(Boolean);
     results11.push({ studentId: s.studentId, name: s.name, skill: s.skill, scores, lastTestPct: r3?.pct ?? r2?.pct ?? r1?.pct ?? 0, batchType: "11th Science 2026" });
 
-    // WhatsApp draft for most recent result
     if (r3 || r2) {
       const latest = r3 ?? r2!;
       const draftExists = await db.select().from(whatsappDraftsTable).where(eq(whatsappDraftsTable.testResultId, latest.resultId)).limit(1);
@@ -387,11 +358,11 @@ async function seed() {
   console.log("  ✓ Scheduled tests added");
 
   await pool.end();
-  console.log("\n✅ Seeding complete!\n");
-  console.log("Demo credentials:");
-  console.log("  Teacher : roman_sir / Roman@123");
-  console.log("  Student : kunal.datkhile.2026 / student@123");
-  console.log("  (All students have password: student@123)");
+  console.log("\n✅ Seeding complete! 19 real students (18 + 1 demo)\n");
+  console.log("Credentials:");
+  console.log("  Teacher      : roman_sir / Roman@123");
+  console.log("  Demo student : kunal.datkhile.2026 / student@123  (read-only)");
+  console.log("  All students : <name>.<name>.2026 / student@123");
 }
 
 seed().catch((e) => { console.error(e); process.exit(1); });

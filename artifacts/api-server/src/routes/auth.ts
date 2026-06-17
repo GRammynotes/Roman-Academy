@@ -5,6 +5,8 @@ import { eq } from "drizzle-orm";
 import * as bcryptjs from "bcryptjs";
 import { logger } from "../lib/logger";
 
+
+
 const router = Router();
 
 const loginAttempts = new Map<string, { count: number; timestamp: number }>();
@@ -104,6 +106,45 @@ router.get("/auth/me", (req: any, res) => {
     role: req.session.role,
     username: req.session.username,
   });
+});
+
+router.post("/auth/change-password", async (req: any, res) => {
+  try {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const users = await db.select().from(usersTable).where(eq(usersTable.id, req.session.userId)).limit(1);
+    const user = users[0];
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (user.isDemo) {
+      return res.status(403).json({ error: "Demo account — password changes are disabled." });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Current and new password are required" });
+    }
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ error: "New password must be at least 6 characters" });
+    }
+
+    const match = await bcryptjs.compare(String(currentPassword), user.passwordHash);
+    if (!match) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
+
+    const newHash = await bcryptjs.hash(String(newPassword), 10);
+    await db.update(usersTable)
+      .set({ passwordHash: newHash, firstLogin: false, updatedAt: new Date() })
+      .where(eq(usersTable.id, user.id));
+
+    return res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Change password error");
+    return res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 export default router;
