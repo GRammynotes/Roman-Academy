@@ -118,18 +118,28 @@ export default function LoginPage() {
                 </button>
               </form>
 
-              <button
-                onClick={(e) => handleLogin(e as any, "roman_sir", "Roman@123")}
-                disabled={loading}
-                className="w-full py-2 border border-gold-500/40 text-gold-300 font-semibold rounded-lg hover:bg-gold-400/10 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors text-sm"
-              >
-                <LogIn className="size-4" /> Demo: Teacher Login
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={(e) => handleLogin(e as any, "roman_sir", "Roman@123")}
+                  disabled={loading}
+                  className="py-2 border border-gold-500/40 text-gold-300 font-semibold rounded-lg hover:bg-gold-400/10 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors text-sm"
+                >
+                  <LogIn className="size-4" /> Demo: Teacher
+                </button>
+                <button
+                  onClick={(e) => handleLogin(e as any, "kunal.datkhile.2026", "student@123")}
+                  disabled={loading}
+                  className="py-2 border border-purple-500/40 text-purple-300 font-semibold rounded-lg hover:bg-purple-400/10 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors text-sm"
+                >
+                  <LogIn className="size-4" /> Demo: Student
+                </button>
+              </div>
 
               <div className="text-xs text-ivory-100/40 bg-navy-900 p-3 rounded-lg space-y-1">
                 <p className="font-semibold text-ivory-100/60">Demo accounts:</p>
                 <p>Teacher: roman_sir / Roman@123</p>
-                <p>Student: Create via teacher dashboard</p>
+                <p>Student: kunal.datkhile.2026 / student@123</p>
+                <p className="text-ivory-100/30">All students: firstname.lastname.2026 / student@123</p>
               </div>
 
               <div className="text-center">
