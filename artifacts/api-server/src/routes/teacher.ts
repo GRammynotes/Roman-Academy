@@ -718,8 +718,12 @@ router.post("/teacher/upload-marks", requireRole(["teacher", "admin"]), uploadMa
         .limit(1);
       const student = students[0];
       if (student) {
-        const percentage = Math.round((result.score / totalMarks) * 100 * 10) / 10;
-        processed.push({ name: result.name, score: result.score, percentage, studentId: student.id });
+        if (result.score > totalMarks * 1.05) {
+          skippedNames.push(`${result.name} (score ${result.score} exceeds totalMarks ${totalMarks})`);
+        } else {
+          const percentage = Math.round((result.score / totalMarks) * 100 * 10) / 10;
+          processed.push({ name: result.name, score: result.score, percentage, studentId: student.id });
+        }
       } else {
         skippedNames.push(result.name);
       }
@@ -858,6 +862,38 @@ router.post("/teacher/upload-marks", requireRole(["teacher", "admin"]), uploadMa
     });
   } catch (err) {
     logger.error({ err }, "Upload marks error");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── WhatsApp Send All ─────────────────────────────────────────────────────
+
+router.post("/teacher/whatsapp/send-all", requireRole(["teacher", "admin"]), async (req: any, res) => {
+  try {
+    const drafts = await db.select({
+      id: whatsappDraftsTable.id,
+      draft: whatsappDraftsTable.draft,
+      whatsappContact: studentsTable.whatsappContact,
+      student: studentsTable.fullName,
+    }).from(whatsappDraftsTable)
+      .innerJoin(studentsTable, eq(whatsappDraftsTable.studentId, studentsTable.id))
+      .where(eq(whatsappDraftsTable.status, "DRAFT"));
+
+    if (drafts.length === 0) return res.json({ success: true, sent: 0, links: [] });
+
+    const links: Array<{ student: string; waLink: string | null }> = [];
+    for (const d of drafts) {
+      await db.update(whatsappDraftsTable)
+        .set({ status: "SENT", updatedAt: new Date() })
+        .where(eq(whatsappDraftsTable.id, d.id));
+      const phone = d.whatsappContact?.replace(/\D/g, "");
+      const waLink = phone ? `https://wa.me/${phone}?text=${encodeURIComponent(d.draft)}` : null;
+      links.push({ student: d.student, waLink });
+    }
+
+    return res.json({ success: true, sent: drafts.length, links });
+  } catch (err) {
+    logger.error({ err }, "Send all WhatsApp error");
     return res.status(500).json({ error: "Internal server error" });
   }
 });
