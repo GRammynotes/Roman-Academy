@@ -1,2 +1,1 @@
 - [Roman Academy — bad percentage data root cause](bad-percentage-data.md) — upload with wrong totalMarks stores pct > 100; score guard now rejects score > totalMarks × 1.05.
-- [Roman Academy — real student roster](student-roster.md) — actual DB usernames for 11th and 12th batch; do NOT use placeholder names in tests.
