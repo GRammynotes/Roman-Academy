@@ -135,19 +135,19 @@ async function seed() {
   // ── 12th Students (12 real + 1 demo Kunal) ───────────────────────────────
   console.log("\n🎓 12th Science 2026 (real students)");
   const twelfth = [
-    { name: "Kunal Datkhile",      phone: "919172765002", parent: "919172765001", demo: true,  sid: KUNAL_STUDENT_ID },
-    { name: "Rujula Khamkar",      phone: "919324390639", parent: "919324390630", demo: false, sid: null },
-    { name: "Shraddha Kamble",     phone: "919326109449", parent: "919326109440", demo: false, sid: null },
-    { name: "Tanashree Gaikwad",   phone: "918080284547", parent: "918080284540", demo: false, sid: null },
-    { name: "Prachi Kamble",       phone: "919152692490", parent: "919152692491", demo: false, sid: null },
-    { name: "Sayali Gupta",        phone: "919136452648", parent: "919136452640", demo: false, sid: null },
-    { name: "Harshala Rajiwade",   phone: "919594165193", parent: "919594165190", demo: false, sid: null },
-    { name: "Aditya Dhurve",       phone: "917738198065", parent: "917738198060", demo: false, sid: null },
-    { name: "Suraj Mote",          phone: "918850526185", parent: "918850526180", demo: false, sid: null },
-    { name: "Manasvi Nehe",        phone: "918850993632", parent: "918850993630", demo: false, sid: null },
-    { name: "Ankit Pal",           phone: "919136743040", parent: "919136743041", demo: false, sid: null },
-    { name: "Sonal Shingare",      phone: "919321225243", parent: "919321225240", demo: false, sid: null },
-    { name: "Ritik Mishra",        phone: "919919633795", parent: "919919633790", demo: false, sid: null },
+    { name: "Kunal Datkhile",      phone: "919900000001", parent: "919900000101", demo: true,  sid: KUNAL_STUDENT_ID },
+    { name: "Rujula Khamkar",      phone: "919900000002", parent: "919900000102", demo: false, sid: null },
+    { name: "Shraddha Kamble",     phone: "919900000003", parent: "919900000103", demo: false, sid: null },
+    { name: "Tanashree Gaikwad",   phone: "919900000004", parent: "919900000104", demo: false, sid: null },
+    { name: "Prachi Kamble",       phone: "919900000005", parent: "919900000105", demo: false, sid: null },
+    { name: "Sayali Gupta",        phone: "919900000006", parent: "919900000106", demo: false, sid: null },
+    { name: "Harshala Rajiwade",   phone: "919900000007", parent: "919900000107", demo: false, sid: null },
+    { name: "Aditya Dhurve",       phone: "919900000008", parent: "919900000108", demo: false, sid: null },
+    { name: "Suraj Mote",          phone: "919900000009", parent: "919900000109", demo: false, sid: null },
+    { name: "Manasvi Nehe",        phone: "919900000010", parent: "919900000110", demo: false, sid: null },
+    { name: "Ankit Pal",           phone: "919900000011", parent: "919900000111", demo: false, sid: null },
+    { name: "Sonal Shingare",      phone: "919900000012", parent: "919900000112", demo: false, sid: null },
+    { name: "Ritik Mishra",        phone: "919900000013", parent: "919900000113", demo: false, sid: null },
   ];
   const skills12 = [0.73, 0.86, 0.79, 0.68, 0.84, 0.77, 0.91, 0.65, 0.88, 0.72, 0.80, 0.85, 0.69];
 
@@ -161,12 +161,12 @@ async function seed() {
   // ── 11th Students (6 real) ───────────────────────────────────────────────
   console.log("\n🎓 11th Science 2026 (real students)");
   const eleventh = [
-    { name: "Manasvi Mankar",      phone: "919004972063", parent: "919004972060" },
-    { name: "Vedika Talekar",      phone: "919326496626", parent: "919326496620" },
-    { name: "Samruddhi Ghodekar",  phone: "919167577818", parent: "919167577810" },
-    { name: "Shravani Shinde",     phone: "919004736613", parent: "919004736610" },
-    { name: "Harshad Kadam",       phone: "919702051592", parent: "919702051590" },
-    { name: "Nisa Bankar",         phone: "917039779068", parent: "917039779060" },
+    { name: "Manasvi Mankar",      phone: "919900000014", parent: "919900000114" },
+    { name: "Vedika Talekar",      phone: "919900000015", parent: "919900000115" },
+    { name: "Samruddhi Ghodekar",  phone: "919900000016", parent: "919900000116" },
+    { name: "Shravani Shinde",     phone: "919900000017", parent: "919900000117" },
+    { name: "Harshad Kadam",       phone: "919900000018", parent: "919900000118" },
+    { name: "Nisa Bankar",         phone: "919900000019", parent: "919900000119" },
   ];
   const skills11 = [0.82, 0.71, 0.88, 0.65, 0.77, 0.91];
 
