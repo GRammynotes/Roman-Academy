@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, Link } from "wouter";
-import { ArrowRight, AlertCircle, Loader2, LogIn } from "lucide-react";
+import { ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { RomanWordmark } from "@/components/roman-wordmark";
 
@@ -11,19 +11,16 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent, demoUser?: string, demoPass?: string) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-
-    const loginUsername = demoUser || username;
-    const loginPassword = demoPass || password;
 
     try {
       const response = await fetch(`${import.meta.env.BASE_URL}api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+        body: JSON.stringify({ username: username.trim(), password }),
       });
 
       const data = await response.json();
@@ -36,7 +33,7 @@ export default function LoginPage() {
       localStorage.setItem("ra_role", data.role);
       const redirectUrl = data.role === "teacher" ? "/teacher" : "/student";
       setLocation(redirectUrl);
-    } catch (err) {
+    } catch {
       setError("Connection error. Please try again.");
       setLoading(false);
     }
@@ -73,7 +70,7 @@ export default function LoginPage() {
                 <p className="text-sm text-ivory-100/60 mt-1">Login to your Roman Academy account</p>
               </div>
 
-              <form onSubmit={(e) => handleLogin(e)} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-ivory-100/80 mb-1">Username</label>
                   <input
@@ -118,29 +115,9 @@ export default function LoginPage() {
                 </button>
               </form>
 
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={(e) => handleLogin(e as any, "roman_sir", "Roman@123")}
-                  disabled={loading}
-                  className="py-2 border border-gold-500/40 text-gold-300 font-semibold rounded-lg hover:bg-gold-400/10 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors text-sm"
-                >
-                  <LogIn className="size-4" /> Demo: Teacher
-                </button>
-                <button
-                  onClick={(e) => handleLogin(e as any, "kunal.datkhile.2026", "student@123")}
-                  disabled={loading}
-                  className="py-2 border border-purple-500/40 text-purple-300 font-semibold rounded-lg hover:bg-purple-400/10 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors text-sm"
-                >
-                  <LogIn className="size-4" /> Demo: Student
-                </button>
-              </div>
-
-              <div className="text-xs text-ivory-100/40 bg-navy-900 p-3 rounded-lg space-y-1">
-                <p className="font-semibold text-ivory-100/60">Demo accounts:</p>
-                <p>Teacher: roman_sir / Roman@123</p>
-                <p>Student: kunal.datkhile.2026 / student@123</p>
-                <p className="text-ivory-100/30">All students: firstname.lastname.2026 / student@123</p>
-              </div>
+              <p className="text-xs text-ivory-100/40 text-center">
+                Contact your teacher if you don't have login credentials.
+              </p>
 
               <div className="text-center">
                 <Link href="/" className="text-xs text-gold-400 hover:text-gold-300 transition-colors">

@@ -100,8 +100,6 @@ export default function AdminStudents() {
               <span className="font-semibold">Stream</span>
               <select value={stream} onChange={e => setStream(e.target.value)} className="h-10 w-full rounded-lg border border-gold-500/25 bg-navy-900 px-3 text-sm text-white outline-none focus:ring-2 focus:ring-gold-400/40">
                 <option value="SCIENCE_PCM">Science (PCM)</option>
-                <option value="COMMERCE_ADDON">Commerce</option>
-                <option value="NEET_ADDON">NEET</option>
               </select>
             </label>
             <label className="space-y-1 text-sm text-ivory-100/80">

@@ -24,7 +24,8 @@ const StudentProfile   = lazy(() => import("@/pages/student/profile"));
 const StudentSettings  = lazy(() => import("@/pages/student/settings"));
 const StudentSupport   = lazy(() => import("@/pages/student/support"));
 
-const AdminStudents = lazy(() => import("@/pages/admin/students"));
+const AdminStudents    = lazy(() => import("@/pages/admin/students"));
+const TeacherAccess   = lazy(() => import("@/pages/teacher-access"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +60,7 @@ function Router() {
         <Route path="/student/support" component={StudentSupport} />
 
         <Route path="/admin/students" component={AdminStudents} />
+        <Route path="/teacher-access" component={TeacherAccess} />
 
         <Route component={NotFound} />
       </Switch>

@@ -212,7 +212,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="text-center text-sm font-semibold text-ivory-100/50 bg-gold-400/5 border border-gold-400/10 p-4 rounded-xl">
-            * Commerce and NEET foundation streams available as limited add-on batches. Contact us for details.
+            Personalized mentorship · Small batches · Board + CET aligned curriculum
           </div>
         </div>
       </section>

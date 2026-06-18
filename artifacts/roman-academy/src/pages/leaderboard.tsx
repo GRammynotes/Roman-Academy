@@ -25,8 +25,6 @@ export default function LeaderboardPage() {
 
   const batchMap: Record<string, Record<string, string>> = {
     SCIENCE_PCM: { ELEVEN: "11th Science 2026", TWELVE: "12th Science 2026" },
-    COMMERCE_ADDON: { ELEVEN: "11th Commerce 2026", TWELVE: "12th Commerce 2026" },
-    NEET_ADDON: { ELEVEN: "11th Science 2026", TWELVE: "12th Science 2026" },
   };
 
   useEffect(() => { setBatch(batchMap[stream]?.[classLevel] || "all"); }, [stream, classLevel]);
@@ -69,8 +67,6 @@ export default function LeaderboardPage() {
               <label className="text-xs font-bold text-ivory-100/60 uppercase">Stream</label>
               <select value={stream} onChange={(e) => setStream(e.target.value)} className="w-full h-10 rounded-lg border border-gold-500/30 bg-navy-900 px-3 text-sm text-white outline-none focus:ring-1 focus:ring-gold-500">
                 <option value="SCIENCE_PCM">Science (PCM)</option>
-                <option value="COMMERCE_ADDON">Commerce</option>
-                <option value="NEET_ADDON">NEET</option>
               </select>
             </div>
             <div className="space-y-1">

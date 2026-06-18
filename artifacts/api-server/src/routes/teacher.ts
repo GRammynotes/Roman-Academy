@@ -169,7 +169,12 @@ router.get("/teacher/students", requireRole(["teacher", "admin"]), async (req: a
 
     const filters: any[] = [eq(studentsTable.archived, false)];
     if (batchFilter) filters.push(eq(studentsTable.batchType, batchFilter));
-    if (q?.trim()) filters.push(ilike(studentsTable.fullName, `%${q.trim()}%`));
+    if (q?.trim()) {
+      const term = `%${q.trim()}%`;
+      filters.push(
+        sql`(${ilike(studentsTable.fullName, term)} OR ${ilike(studentsTable.whatsappContact, term)} OR ${ilike(usersTable.username, term)})`
+      );
+    }
 
     const students = await db.select({
       id: studentsTable.id,
@@ -326,7 +331,7 @@ router.post("/students", requireRole(["teacher", "admin"]), studentMutationLimit
 router.patch("/students/:id", requireRole(["teacher", "admin"]), studentMutationLimiter, async (req: any, res) => {
   try {
     const { id } = req.params;
-    const { fullName, whatsappContact, parentContact, notes } = req.body;
+    const { fullName, whatsappContact, parentContact, notes, newPassword } = req.body;
 
     await db.update(studentsTable)
       .set({
@@ -336,6 +341,17 @@ router.patch("/students/:id", requireRole(["teacher", "admin"]), studentMutation
         ...(notes !== undefined ? { notes } : {}),
       })
       .where(eq(studentsTable.id, id));
+
+    if (newPassword && String(newPassword).length >= 6) {
+      const newHash = await bcryptjs.hash(String(newPassword), 10);
+      const student = await db.select({ userId: studentsTable.userId })
+        .from(studentsTable).where(eq(studentsTable.id, id)).limit(1);
+      if (student[0]?.userId) {
+        await db.update(usersTable)
+          .set({ passwordHash: newHash, firstLogin: true, updatedAt: new Date() })
+          .where(eq(usersTable.id, student[0].userId));
+      }
+    }
 
     return res.json({ success: true });
   } catch (err) {
