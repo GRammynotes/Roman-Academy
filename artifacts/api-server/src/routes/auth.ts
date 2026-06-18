@@ -110,8 +110,12 @@ router.get("/auth/me", (req: any, res) => {
 
 router.get("/auth/teacher-access", async (req: any, res) => {
   try {
+    const expected = process.env.TEACHER_MAGIC_TOKEN;
+    if (!expected) {
+      logger.warn("TEACHER_MAGIC_TOKEN env var is not set — teacher-access route is disabled");
+      return res.status(503).json({ error: "Teacher access link is not configured. Contact the administrator." });
+    }
     const { token } = req.query;
-    const expected = process.env.TEACHER_MAGIC_TOKEN || "roman-teacher-2026";
     if (!token || token !== expected) {
       return res.status(403).json({ error: "Invalid or missing access token" });
     }
