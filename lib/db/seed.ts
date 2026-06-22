@@ -8,8 +8,9 @@ import { eq, and } from "drizzle-orm";
 import * as bcryptjs from "bcryptjs";
 import { randomUUID } from "crypto";
 
-const TEACHER_ID = "f77cf0ed-8ac3-4e83-8f5c-603b56e52b34";
-const KUNAL_ID   = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+const TEACHER_ID      = "f77cf0ed-8ac3-4e83-8f5c-603b56e52b34";
+const SUPER_ADMIN_ID  = "00000000-0000-0000-0000-000000000001";
+const KUNAL_ID        = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
 const KUNAL_STUDENT_ID = "b2c3d4e5-f6a7-8901-bcde-f12345678901";
 
 function daysAgo(n: number) { const d = new Date(); d.setDate(d.getDate() - n); return d; }
@@ -116,12 +117,26 @@ async function ensureChapters(chapters: Array<{ name: string; subject: string; c
 async function seed() {
   console.log("\n🌱 Seeding Roman Academy database (REAL students)...\n");
 
+  // ── SUPER_ADMIN (hidden recovery account) ────────────────────────────────
+  console.log("🔐 Super Admin");
+  const existingSuperAdmin = await db.select().from(usersTable).where(eq(usersTable.id, SUPER_ADMIN_ID)).limit(1);
+  if (existingSuperAdmin.length === 0) {
+    const superHash = await bcryptjs.hash("RomanAdmin@2026!", 10);
+    await db.insert(usersTable).values({
+      id: SUPER_ADMIN_ID, username: "super_admin", passwordHash: superHash,
+      role: "TEACHER", firstLogin: false, isDemo: false,
+    });
+    console.log("  ✓ Super admin created: super_admin / RomanAdmin@2026!");
+  } else {
+    console.log("  ✓ Super admin already exists: super_admin");
+  }
+
   // ── Teacher ──────────────────────────────────────────────────────────────
   console.log("👤 Teacher");
   const existingTeacher = await db.select().from(usersTable).where(eq(usersTable.id, TEACHER_ID)).limit(1);
   if (existingTeacher.length === 0) {
     const hash = await bcryptjs.hash("Roman@123", 10);
-    await db.insert(usersTable).values({ id: TEACHER_ID, username: "roman_sir", passwordHash: hash, role: "TEACHER" });
+    await db.insert(usersTable).values({ id: TEACHER_ID, username: "roman_sir", passwordHash: hash, role: "TEACHER", firstLogin: false });
     console.log("  ✓ Teacher created: roman_sir / Roman@123");
   } else {
     console.log("  ✓ Teacher already exists: roman_sir");

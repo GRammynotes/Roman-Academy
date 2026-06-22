@@ -79,6 +79,7 @@ router.post("/auth/login", async (req: any, res) => {
       role,
       userId: user.id,
       username: user.username,
+      firstLogin: user.firstLogin ?? false,
       ...(studentId && { studentId }),
     });
   } catch (err) {

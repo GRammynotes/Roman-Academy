@@ -1,0 +1,58 @@
+og prompt:
+
+also give opt to edit students data in teachers student management lists and auto sync things .
+
+Next, I can add a teacher login hint on the login page so Roman sir doesn't have to remember the URL path, showing a small "Teacher login?" link that fills the credentials automatically. Would you like me to do that? for this
+
+make some special login access for teacher that directly opens teacher dashboard and no again logins required but still keep
+
+Teacher: roman_sir / Roman@123 so if any new teacher wants to access they can fill inputs
+
+Student: kunal.datkhile.2026 / student@123
+
+this as teacher and demo account even if prompt says remove keep student demo part kunal one
+
+
+
+and remove login details from login and other pages for security aspeacts that only valid users get their acc access and teacher has access to reset students details including password
+
+and focus on ui ux https://roman-academy-xi.vercel.app/ use this websites roman academy name's design and other font's with colour;s and spacing content details and bright grids for landing page using this and most imp toggle theme with brouchers designs :
+
+
+
+the leaderboards still work for neet categeory remove neet and commerce part for now from whole website no fields must be present
+
+
+
+for parents WhatsApp nom give only teacher access to
+
+reset with students profile open give edit opt there and not students
+
+
+
+keep search student by different fileds name username phone or batch ,use any which suits better in teacher's student management
+
+
+
+React-Bits Animation Names (Sequence)
+
+GradientText – Hero Heading
+
+ShapeGrid – Hero Background
+
+ScrollFloat – Personal Tuition / Concept Focused / Result Driven
+
+StarBorder – CTA Buttons (Enquire Now, View Batch)
+
+PixelCard – Faculty Cards
+
+GridScan – Active Batches Background
+
+Noise – Contact Section Background
+
+Ferrofluid – Login Page Background
+
+CardNav (or Dock) – Navbar Animation
+
+AnimatedList – Student Lists / Leaderboards
+
