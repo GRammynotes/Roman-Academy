@@ -161,7 +161,6 @@ export default function SchedulePage() {
               <select value={form.batchName} onChange={e => setForm(f => ({ ...f, batchName: e.target.value }))} className={SELECT_CLS}>
                 <option>12th Science 2026</option>
                 <option>11th Science 2026</option>
-                <option>12th Commerce 2026</option>
               </select>
             </label>
 

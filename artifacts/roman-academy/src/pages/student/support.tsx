@@ -50,7 +50,7 @@ export default function StudentSupport() {
                 <p className="font-bold text-white">Kunal Datkhile</p>
                 <div className="flex items-center gap-3 text-sm text-ivory-100/70">
                   <Phone className="size-4 text-gold-600" />
-                  <a href="tel:+919172765002" className="hover:text-gold-300 transition-colors">+91 917276 5002</a>
+                  <a href="tel:+919172765002" className="hover:text-gold-300 transition-colors">+91 91727 65002</a>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-ivory-100/70">
                   <Mail className="size-4 text-gold-600" />

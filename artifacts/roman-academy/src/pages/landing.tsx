@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { BookOpen, Target, Users, MapPin, X, Star, ChevronRight, GraduationCap, Trophy, Phone, Mail, Clock } from "lucide-react";
+import { BookOpen, Target, Users, MapPin, X, Star, ChevronRight, GraduationCap, Trophy, Phone, Mail, Clock, Menu } from "lucide-react";
 import { RomanWordmark } from "@/components/roman-wordmark";
 import GradientText from "@/components/react-bits/GradientText";
 import ShapeGrid from "@/components/react-bits/ShapeGrid";
@@ -80,6 +80,15 @@ export default function LandingPage() {
     return false;
   });
   const [activeGallery, setActiveGallery] = useState<typeof GALLERY_ITEMS[0] | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navLinks = [
+    { href: "#home",    label: "Home" },
+    { href: "#batches", label: "Batches" },
+    { href: "#results", label: "Results" },
+    { href: "#faculty", label: "Faculty" },
+    { href: "#gallery", label: "Gallery" },
+  ];
 
   return (
     <div className="min-h-screen bg-navy-950 scroll-smooth">
@@ -88,17 +97,49 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 md:px-8 h-16 flex items-center justify-between">
           <RomanWordmark />
           <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-ivory-100/75">
-            <a href="#home"    className="hover:text-gold-300 transition-colors">Home</a>
-            <a href="#batches" className="hover:text-gold-300 transition-colors">Batches</a>
-            <a href="#results" className="hover:text-gold-300 transition-colors">Results</a>
-            <a href="#faculty" className="hover:text-gold-300 transition-colors">Faculty</a>
-            <a href="#gallery" className="hover:text-gold-300 transition-colors">Gallery</a>
+            {navLinks.map(l => (
+              <a key={l.href} href={l.href} className="hover:text-gold-300 transition-colors">{l.label}</a>
+            ))}
             <Link href="/contact" className="hover:text-gold-300 transition-colors">Contact</Link>
           </div>
-          <Link href="/login" className="inline-flex h-9 items-center justify-center rounded-lg bg-gold-400 px-5 text-sm font-bold text-navy-950 transition hover:bg-gold-300 shadow-[0_0_15px_rgba(212,175,55,0.25)]">
-            Login
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="inline-flex h-9 items-center justify-center rounded-lg bg-gold-400 px-5 text-sm font-bold text-navy-950 transition hover:bg-gold-300 shadow-[0_0_15px_rgba(212,175,55,0.25)]">
+              Login
+            </Link>
+            <button
+              onClick={() => setMobileMenuOpen(o => !o)}
+              className="md:hidden p-2 rounded-lg text-ivory-100/70 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile menu drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-gold-400/10 bg-navy-950/98 backdrop-blur-xl">
+            <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1">
+              {navLinks.map(l => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2.5 rounded-lg text-sm font-semibold text-ivory-100/80 hover:text-gold-300 hover:bg-gold-400/8 transition-colors"
+                >
+                  {l.label}
+                </a>
+              ))}
+              <Link
+                href="/contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-4 py-2.5 rounded-lg text-sm font-semibold text-ivory-100/80 hover:text-gold-300 hover:bg-gold-400/8 transition-colors"
+              >
+                Contact
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero */}
@@ -248,7 +289,17 @@ export default function LandingPage() {
         </ScrollFloat>
         <ScrollFloat delay={0.1}>
           <div className="rounded-2xl overflow-hidden border border-gold-400/20 shadow-2xl" style={{ background: "linear-gradient(135deg, #0A1628 0%, #050B1A 100%)" }}>
-            <img src="/academy/ssc-results-2026.jpg" alt="Roman Academy SSC 2026 Results" className="w-full object-contain max-h-[70vh]" />
+            <img
+              src="/academy/ssc-results-2026.jpg"
+              alt="Roman Academy SSC 2026 Results"
+              className="w-full object-contain max-h-[70vh]"
+              onError={(e) => {
+                const parent = (e.currentTarget as HTMLImageElement).parentElement;
+                if (parent) {
+                  parent.innerHTML = `<div class="flex flex-col items-center justify-center py-24 px-8 text-center gap-4"><svg xmlns="http://www.w3.org/2000/svg" class="size-14 text-gold-400/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.25 9.71 2 12 2c2.291 0 4.545.25 6.75.721v1.515m0 0a48.667 48.667 0 01-6.75.85m6.75-.85A6.003 6.003 0 0118.27 9.728m-13.02 0a6.003 6.003 0 005.396-5.492"/></svg><p class="text-xl font-bold text-white">SSC 2026 Results</p><p class="text-ivory-100/50 text-sm max-w-sm">Results board photo coming soon. See the stats below for our proud achievements!</p></div>`;
+                }
+              }}
+            />
           </div>
         </ScrollFloat>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
