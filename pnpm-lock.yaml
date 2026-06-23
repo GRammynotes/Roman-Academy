@@ -164,18 +164,6 @@ importers:
         specifier: ~5.9.3
         version: 5.9.3
 
-  .local/share/pnpm/.tools/pnpm/11.7.0_tmp_104:
-    dependencies:
-      pnpm:
-        specifier: 11.7.0
-        version: 11.7.0
-
-  .local/share/pnpm/.tools/pnpm/11.7.0_tmp_4185:
-    dependencies:
-      pnpm:
-        specifier: 11.7.0
-        version: 11.7.0
-
   artifacts/api-server:
     dependencies:
       '@types/bcryptjs':
@@ -5023,11 +5011,6 @@ packages:
   pngjs@3.4.0:
     resolution: {integrity: sha512-NCrCHhWmnQklfH4MtJMRjZ2a8c80qXeMlQMv2uVp9ISJMTt562SbGd6n2oq0PaPgKm7Z6pL9E2UlLIhC+SHL3w==}
     engines: {node: '>=4.0.0'}
-
-  pnpm@11.7.0:
-    resolution: {integrity: sha512-GcyFLBIMcSV2DyRD7mvgyltA+fUFmN4aCaHxd1A+AQ5Xwjx3ZG4B52HeWb+HT7IqM5jDOrlpH8E+uUa28PTWIA==}
-    engines: {node: '>=22.13'}
-    hasBin: true
 
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
@@ -11409,8 +11392,6 @@ snapshots:
       xmlbuilder: 15.1.1
 
   pngjs@3.4.0: {}
-
-  pnpm@11.7.0: {}
 
   possible-typed-array-names@1.1.0: {}
 
