@@ -96,77 +96,90 @@ const Ferrofluid: React.FC<FerrofluidProps> = ({
     const container = containerRef.current;
     if (!container) return;
 
-    const renderer = new Renderer({ dpr: dpr ?? window.devicePixelRatio ?? 1, alpha: true, antialias: true });
-    rendererRef.current = renderer;
-    const gl = renderer.gl;
-    const canvas = gl.canvas as HTMLCanvasElement;
-    gl.clearColor(0,0,0,0);
-    canvas.style.width = '100%'; canvas.style.height = '100%'; canvas.style.display = 'block';
-    container.appendChild(canvas);
+    let renderer: Renderer;
+    let canvas: HTMLCanvasElement;
+    let ro: ResizeObserver;
 
-    const { arr, count, avg } = prepColors(colors);
-    const uniforms: Record<string, { value: any }> = {
-      iResolution: { value: [gl.drawingBufferWidth, gl.drawingBufferHeight, 1] },
-      iMouse: { value: [0, 0] }, iTime: { value: 0 },
-      uColor0: { value: arr[0] }, uColor1: { value: arr[1] }, uColor2: { value: arr[2] }, uColor3: { value: arr[3] },
-      uColor4: { value: arr[4] }, uColor5: { value: arr[5] }, uColor6: { value: arr[6] }, uColor7: { value: arr[7] },
-      uColorCount: { value: count }, uMouseColor: { value: avg },
-      uFlow: { value: flowVec(flowDirection) }, uSpeed: { value: speed }, uScale: { value: scale },
-      uTurbulence: { value: turbulence }, uFluidity: { value: fluidity }, uRimWidth: { value: rimWidth },
-      uSharpness: { value: sharpness }, uShimmer: { value: shimmer }, uGlow: { value: glow },
-      uOpacity: { value: opacity }, uMouseEnabled: { value: mouseInteraction ? 1 : 0 },
-      uMouseStrength: { value: mouseStrength }, uMouseRadius: { value: mouseRadius },
-    };
+    try {
+      renderer = new Renderer({ dpr: dpr ?? window.devicePixelRatio ?? 1, alpha: true, antialias: true });
+      rendererRef.current = renderer;
+      const gl = renderer.gl;
+      if (!gl) return;
+      canvas = gl.canvas as HTMLCanvasElement;
+      gl.clearColor(0,0,0,0);
+      canvas.style.width = '100%'; canvas.style.height = '100%'; canvas.style.display = 'block';
+      container.appendChild(canvas);
 
-    const program = new Program(gl, { vertex, fragment, uniforms });
-    programRef.current = program;
-    const geometry = new Triangle(gl);
-    geometryRef.current = geometry;
-    const mesh = new Mesh(gl, { geometry, program });
-    meshRef.current = mesh;
+      const { arr, count, avg } = prepColors(colors);
+      const uniforms: Record<string, { value: any }> = {
+        iResolution: { value: [gl.drawingBufferWidth, gl.drawingBufferHeight, 1] },
+        iMouse: { value: [0, 0] }, iTime: { value: 0 },
+        uColor0: { value: arr[0] }, uColor1: { value: arr[1] }, uColor2: { value: arr[2] }, uColor3: { value: arr[3] },
+        uColor4: { value: arr[4] }, uColor5: { value: arr[5] }, uColor6: { value: arr[6] }, uColor7: { value: arr[7] },
+        uColorCount: { value: count }, uMouseColor: { value: avg },
+        uFlow: { value: flowVec(flowDirection) }, uSpeed: { value: speed }, uScale: { value: scale },
+        uTurbulence: { value: turbulence }, uFluidity: { value: fluidity }, uRimWidth: { value: rimWidth },
+        uSharpness: { value: sharpness }, uShimmer: { value: shimmer }, uGlow: { value: glow },
+        uOpacity: { value: opacity }, uMouseEnabled: { value: mouseInteraction ? 1 : 0 },
+        uMouseStrength: { value: mouseStrength }, uMouseRadius: { value: mouseRadius },
+      };
 
-    const resize = () => {
-      const rect = container.getBoundingClientRect();
-      renderer.setSize(rect.width, rect.height);
-      uniforms.iResolution.value = [gl.drawingBufferWidth, gl.drawingBufferHeight, 1];
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(container);
+      const program = new Program(gl, { vertex, fragment, uniforms });
+      programRef.current = program;
+      const geometry = new Triangle(gl);
+      geometryRef.current = geometry;
+      const mesh = new Mesh(gl, { geometry, program });
+      meshRef.current = mesh;
 
-    const onPointerMove = (e: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const sc = renderer.dpr || 1;
-      mouseTargetRef.current = [(e.clientX - rect.left) * sc, (rect.height - (e.clientY - rect.top)) * sc];
-      if (mouseDampening <= 0) uniforms.iMouse.value = [...mouseTargetRef.current];
-    };
-    if (mouseInteraction) canvas.addEventListener('pointermove', onPointerMove);
+      const resize = () => {
+        const rect = container.getBoundingClientRect();
+        renderer.setSize(rect.width, rect.height);
+        uniforms.iResolution.value = [gl.drawingBufferWidth, gl.drawingBufferHeight, 1];
+      };
+      resize();
+      ro = new ResizeObserver(resize);
+      ro.observe(container);
 
-    const loop = (t: number) => {
+      const onPointerMove = (e: PointerEvent) => {
+        const rect = canvas.getBoundingClientRect();
+        const sc = renderer.dpr || 1;
+        mouseTargetRef.current = [(e.clientX - rect.left) * sc, (rect.height - (e.clientY - rect.top)) * sc];
+        if (mouseDampening <= 0) uniforms.iMouse.value = [...mouseTargetRef.current];
+      };
+      if (mouseInteraction) canvas.addEventListener('pointermove', onPointerMove);
+
+      const loop = (t: number) => {
+        rafRef.current = requestAnimationFrame(loop);
+        uniforms.iTime.value = t * 0.001;
+        if (mouseDampening > 0) {
+          if (!lastTimeRef.current) lastTimeRef.current = t;
+          const dt = (t - lastTimeRef.current) / 1000;
+          lastTimeRef.current = t;
+          const factor = Math.min(1, 1 - Math.exp(-dt / Math.max(1e-4, mouseDampening)));
+          const cur = uniforms.iMouse.value as number[];
+          cur[0] += (mouseTargetRef.current[0] - cur[0]) * factor;
+          cur[1] += (mouseTargetRef.current[1] - cur[1]) * factor;
+        } else lastTimeRef.current = t;
+        if (!paused && programRef.current && meshRef.current) {
+          try { renderer.render({ scene: meshRef.current }); } catch {}
+        }
+      };
       rafRef.current = requestAnimationFrame(loop);
-      uniforms.iTime.value = t * 0.001;
-      if (mouseDampening > 0) {
-        if (!lastTimeRef.current) lastTimeRef.current = t;
-        const dt = (t - lastTimeRef.current) / 1000;
-        lastTimeRef.current = t;
-        const factor = Math.min(1, 1 - Math.exp(-dt / Math.max(1e-4, mouseDampening)));
-        const cur = uniforms.iMouse.value as number[];
-        cur[0] += (mouseTargetRef.current[0] - cur[0]) * factor;
-        cur[1] += (mouseTargetRef.current[1] - cur[1]) * factor;
-      } else lastTimeRef.current = t;
-      if (!paused && programRef.current && meshRef.current) {
-        try { renderer.render({ scene: meshRef.current }); } catch {}
-      }
-    };
-    rafRef.current = requestAnimationFrame(loop);
 
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (mouseInteraction) canvas.removeEventListener('pointermove', onPointerMove);
-      ro.disconnect();
-      if (canvas.parentElement === container) container.removeChild(canvas);
-      rendererRef.current = null; programRef.current = null; geometryRef.current = null; meshRef.current = null;
-    };
+      return () => {
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        if (mouseInteraction) canvas.removeEventListener('pointermove', onPointerMove);
+        ro?.disconnect();
+        if (canvas.parentElement === container) container.removeChild(canvas);
+        rendererRef.current = null; programRef.current = null; geometryRef.current = null; meshRef.current = null;
+      };
+    } catch {
+      return () => {
+        ro?.disconnect();
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        rendererRef.current = null; programRef.current = null; geometryRef.current = null; meshRef.current = null;
+      };
+    }
   }, [dpr, paused, JSON.stringify(colors), speed, scale, turbulence, fluidity, rimWidth, sharpness, shimmer, glow, flowDirection, opacity, mouseInteraction, mouseStrength, mouseRadius, mouseDampening]);
 
   return (
