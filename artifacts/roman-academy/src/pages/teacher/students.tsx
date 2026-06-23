@@ -83,7 +83,10 @@ export default function TeacherStudents() {
     if (q) params.set("q", q);
     if (batch !== "all") params.set("batch", batch);
     fetch(`${import.meta.env.BASE_URL}api/teacher/students?${params}`)
-      .then(r => r.json()).then(setStudents).catch(() => setStudents([])).finally(() => setLoading(false));
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setStudents(Array.isArray(data) ? data : []))
+      .catch(() => setStudents([]))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { loadStudents(); }, []);
