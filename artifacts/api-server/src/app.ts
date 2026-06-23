@@ -1,11 +1,14 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import helmet from "helmet";
 import pinoHttp from "pino-http";
 import session from "express-session";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
+
+const isProduction = process.env.NODE_ENV === "production";
 
 app.use(
   pinoHttp({
@@ -26,10 +29,27 @@ app.use(
     },
   }),
 );
+
 app.set("trust proxy", 1);
-app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  }),
+);
+
+const allowedOrigins = isProduction
+  ? (process.env.ALLOWED_ORIGINS ?? "").split(",").map(o => o.trim()).filter(Boolean)
+  : true;
+
+app.use(cors({
+  origin: allowedOrigins.length ? allowedOrigins : true,
+  credentials: true,
+}));
+
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 const sessionSecret = process.env.SESSION_SECRET;
 if (!sessionSecret) {
@@ -45,7 +65,7 @@ app.use(
       httpOnly: true,
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction,
     },
     name: "ra_session",
   }),
