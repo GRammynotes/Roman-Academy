@@ -1,11 +1,8 @@
 {
+  "framework": "vite",
+  "installCommand": "pnpm install",
   "buildCommand": "pnpm --filter @workspace/roman-academy run build",
   "outputDirectory": "artifacts/roman-academy/dist/public",
-  "installCommand": "pnpm install",
-  {
-    "framework": "vite",
-    "outputDirectory": "artifacts/roman-academy/dist/public"
-  },
   "rewrites": [
     {
       "source": "/api/:path*",
