@@ -117,7 +117,7 @@ export default function LeaderboardPage() {
                     <p className="font-bold text-white">{student.fullName}</p>
                     <p className="text-xs text-ivory-100/50">{student.batchType}</p>
                   </div>
-                  <Badge tone={student.average >= 75 ? "green" : student.average >= 65 ? "gold" : "red"}>{student.average}%</Badge>
+                  <Badge tone={student.average >= 75 ? "success" : student.average >= 65 ? "gold" : "danger"}>{student.average}%</Badge>
                   <p className="hidden md:block text-ivory-100/70">{student.lastTest ?? "—"}%</p>
                   <div className="hidden md:flex items-center gap-1">
                     {student.rankMovement === null ? (

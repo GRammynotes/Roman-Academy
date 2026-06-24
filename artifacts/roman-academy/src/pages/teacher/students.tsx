@@ -309,7 +309,7 @@ export default function TeacherStudents() {
                         </button>
                         <div className="flex items-center gap-2">
                           <div className="hidden sm:flex gap-2">
-                            <Badge tone="blue">{student.classLevel === "TWELVE" ? "12th" : "11th"}</Badge>
+                            <Badge tone="info">{student.classLevel === "TWELVE" ? "12th" : "11th"}</Badge>
                             <Badge tone="gold">{student.batchType}</Badge>
                           </div>
                           <button

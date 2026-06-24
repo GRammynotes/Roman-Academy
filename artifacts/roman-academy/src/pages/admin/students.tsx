@@ -140,7 +140,7 @@ export default function AdminStudents() {
                       <p className="text-xs text-ivory-100/50 mt-0.5">{student.batchType} · {student.whatsappContact || "No phone"}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      {avg !== null && <Badge tone={avg >= 75 ? "green" : avg >= 60 ? "gold" : "red"}>{avg}%</Badge>}
+                      {avg !== null && <Badge tone={avg >= 75 ? "success" : avg >= 60 ? "gold" : "danger"}>{avg}%</Badge>}
                       <button onClick={() => setSelected(student)} className="p-1.5 rounded-lg hover:bg-white/10 text-ivory-100/60 transition-colors">
                         <Eye className="size-4" />
                       </button>

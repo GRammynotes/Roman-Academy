@@ -138,7 +138,7 @@ export default function SettingsPage() {
                     <p className="font-semibold text-white">{p.label}</p>
                     <p className="text-xs text-ivory-100/50 mt-0.5">Model: {p.model} · {p.maskedKey}</p>
                   </div>
-                  <Badge tone={p.configured ? "green" : "neutral"}>{p.configured ? "Configured" : "Not Set"}</Badge>
+                  <Badge tone={p.configured ? "success" : "navy"}>{p.configured ? "Configured" : "Not Set"}</Badge>
                 </div>
               ))
             )}

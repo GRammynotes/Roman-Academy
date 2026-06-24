@@ -39,12 +39,12 @@ app.use(
   }),
 );
 
-const allowedOrigins = isProduction
+const allowedOrigins: string[] | boolean = isProduction
   ? (process.env.ALLOWED_ORIGINS ?? "").split(",").map(o => o.trim()).filter(Boolean)
   : true;
 
 app.use(cors({
-  origin: allowedOrigins.length ? allowedOrigins : true,
+  origin: Array.isArray(allowedOrigins) && allowedOrigins.length > 0 ? allowedOrigins : true,
   credentials: true,
 }));
 

@@ -54,8 +54,8 @@ export default function StudentTests() {
                         <p className="text-xs text-ivory-100/50 mt-0.5 font-normal">{test.testType} · {test.date}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge tone={test.percentage >= 75 ? "green" : test.percentage >= 60 ? "gold" : "red"}>{test.percentage}%</Badge>
-                        <Badge tone="blue">Rank #{test.rank}</Badge>
+                        <Badge tone={test.percentage >= 75 ? "success" : test.percentage >= 60 ? "gold" : "danger"}>{test.percentage}%</Badge>
+                        <Badge tone="info">Rank #{test.rank}</Badge>
                       </div>
                     </summary>
                     <div className="mt-4 space-y-2 text-sm text-ivory-100/70 border-t border-gold-500/10 pt-4">

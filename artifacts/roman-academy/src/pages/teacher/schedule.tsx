@@ -235,7 +235,7 @@ export default function SchedulePage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge tone={testTypeBadge(item.testType) as any}>{testTypeLabel(item.testType)}</Badge>
-                    <Badge tone={item.status === "upcoming" ? "gold" : "neutral"}>{item.status}</Badge>
+                    <Badge tone={item.status === "upcoming" ? "gold" : "navy"}>{item.status}</Badge>
                   </div>
                 </div>
               ))
