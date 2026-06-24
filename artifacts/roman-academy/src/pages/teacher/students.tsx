@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Loader2, Save, Search, User, TrendingUp, BookOpen, Phone, ChevronDown, ChevronUp, AlertCircle, Edit2, X, KeyRound } from "lucide-react";
+import { Plus, Loader2, Save, Search, User, TrendingUp, BookOpen, Phone, ChevronDown, ChevronUp, AlertCircle, Edit2, X, KeyRound, Trash2 } from "lucide-react";
 
 type Student = {
   id: string;
@@ -70,6 +70,8 @@ export default function TeacherStudents() {
   const [editForm, setEditForm] = useState<EditForm>({ fullName: "", whatsappContact: "", parentContact: "", classLevel: "TWELVE", notes: "", newPassword: "" });
   const [editSaving, setEditSaving] = useState(false);
   const [editMsg, setEditMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [form, setForm] = useState({
     fullName: "", studentPhone: "", parentPhone: "", classLevel: "TWELVE", stream: "SCIENCE_PCM", notes: "",
@@ -128,6 +130,22 @@ export default function TeacherStudents() {
   const cancelEdit = () => {
     setEditingId(null);
     setEditMsg(null);
+  };
+
+  const deleteStudent = async (id: string) => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/teacher/students/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to remove student");
+      setConfirmDeleteId(null);
+      setExpanded(null);
+      setAnalytics(prev => { const n = { ...prev }; delete n[id]; return n; });
+      loadStudents(searchQ, batchFilter);
+    } catch {
+      setConfirmDeleteId(null);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const saveEdit = async (id: string) => {
@@ -320,6 +338,13 @@ export default function TeacherStudents() {
                             {isEditing ? <X className="size-4" /> : <Edit2 className="size-4" />}
                           </button>
                           <button
+                            onClick={() => { if (!isEditing) setConfirmDeleteId(confirmDeleteId === student.id ? null : student.id); }}
+                            className="p-1.5 rounded-lg transition-colors text-red-400/60 hover:text-red-400 hover:bg-red-500/10"
+                            title="Remove student"
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                          <button
                             onClick={() => !isEditing && loadAnalytics(student.id)}
                             className="p-1.5 text-ivory-100/40 hover:text-ivory-100/60"
                           >
@@ -327,6 +352,31 @@ export default function TeacherStudents() {
                           </button>
                         </div>
                       </div>
+
+                      {/* Delete confirmation */}
+                      {confirmDeleteId === student.id && !isEditing && (
+                        <div className="border-t border-red-500/20 p-4 bg-red-950/20 flex items-center justify-between gap-4">
+                          <p className="text-sm text-red-300">
+                            Remove <span className="font-semibold text-white">{student.fullName}</span>? This hides them from all lists but keeps their data.
+                          </p>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              onClick={() => deleteStudent(student.id)}
+                              disabled={deleting}
+                              className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                            >
+                              {deleting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
+                              Remove
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="px-3 py-1.5 border border-gold-500/25 text-ivory-100/60 text-xs rounded-lg hover:bg-white/5 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Edit form */}
                       {isEditing && (
