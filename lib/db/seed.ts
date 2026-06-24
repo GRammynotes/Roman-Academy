@@ -5,7 +5,7 @@ import {
   whatsappDraftsTable, scheduledTestsTable, academicYearsTable, subjectsTable,
   chapterProgressTable,
 } from "./src/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import * as bcryptjs from "bcryptjs";
 import { randomUUID } from "crypto";
 
@@ -257,19 +257,37 @@ async function initChapterProgress(
   }
 }
 
-async function assignChaptersToStudent(
-  studentId: string,
+async function assignChaptersBatch(
+  students: Array<{ studentId: string }>,
   chapterIds: Record<string, string>,
 ) {
-  const existing = await db.select({ chapterId: studentChaptersTable.chapterId })
-    .from(studentChaptersTable).where(eq(studentChaptersTable.studentId, studentId));
-  const existingIds = new Set(existing.map(e => e.chapterId));
+  if (students.length === 0) return;
+  const studentIds = students.map(s => s.studentId);
 
-  for (const [name, chapterId] of Object.entries(chapterIds)) {
-    if (existingIds.has(chapterId)) continue;
-    await db.insert(studentChaptersTable).values({
-      id: randomUUID(), studentId, chapterId, chapterName: name, status: "PLANNED",
-    });
+  const existing = await db.select({
+    studentId: studentChaptersTable.studentId,
+    chapterId: studentChaptersTable.chapterId,
+  }).from(studentChaptersTable)
+    .where(inArray(studentChaptersTable.studentId, studentIds));
+
+  const existingSet = new Set(existing.map(e => `${e.studentId}:${e.chapterId}`));
+
+  const toInsert: Array<{
+    id: string; studentId: string; chapterId: string; chapterName: string; status: "PLANNED";
+  }> = [];
+
+  for (const { studentId } of students) {
+    for (const [name, chapterId] of Object.entries(chapterIds)) {
+      if (existingSet.has(`${studentId}:${chapterId}`)) continue;
+      toInsert.push({ id: randomUUID(), studentId, chapterId, chapterName: name, status: "PLANNED" });
+    }
+  }
+
+  if (toInsert.length === 0) return;
+
+  const CHUNK = 200;
+  for (let i = 0; i < toInsert.length; i += CHUNK) {
+    await db.insert(studentChaptersTable).values(toInsert.slice(i, i + CHUNK));
   }
 }
 
@@ -361,8 +379,8 @@ async function seed() {
 
   // ── Student Chapters ──────────────────────────────────────────────────────
   console.log("\n📚 Assigning chapters to students");
-  for (const s of students11) await assignChaptersToStudent(s.studentId, chapterIds11);
-  for (const s of students12) await assignChaptersToStudent(s.studentId, chapterIds12);
+  await assignChaptersBatch(students11, chapterIds11);
+  await assignChaptersBatch(students12, chapterIds12);
   console.log("  ✓ All students have chapters assigned (PLANNED)");
 
   // ── Scheduled Tests ───────────────────────────────────────────────────────
