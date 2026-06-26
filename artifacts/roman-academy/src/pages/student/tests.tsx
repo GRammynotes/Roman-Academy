@@ -22,7 +22,7 @@ export default function StudentTests() {
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}api/student/tests`)
-      .then(r => r.json()).then(setTests).catch(() => setTests([])).finally(() => setLoading(false));
+      .then(r => r.json()).then(data => setTests(Array.isArray(data) ? data : [])).catch(() => setTests([])).finally(() => setLoading(false));
   }, []);
 
   return (

@@ -5,7 +5,7 @@ import {
   whatsappDraftsTable, scheduledTestsTable, academicYearsTable, subjectsTable,
   chapterProgressTable,
 } from "./src/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, sql } from "drizzle-orm";
 import * as bcryptjs from "bcryptjs";
 import { randomUUID } from "crypto";
 
@@ -384,9 +384,62 @@ async function seed() {
   await scheduleTest(batch12Id, "Weekly Test 1 - Mathematical Logic", "WEEKLY_CHAPTER", daysFromNow(7));
   console.log("  ✓ Upcoming scheduled tests added");
 
+  // ── Sample Test Results ───────────────────────────────────────────────────
+  console.log("\n📊 Sample Test Results");
+
+  async function seedTest(
+    batchId: string, classLevel: "ELEVEN" | "TWELVE", stream: "SCIENCE_PCM",
+    testName: string, testType: any, date: Date, totalMarks: number,
+    students: Array<{ studentId: string }>, scores: number[],
+  ) {
+    const existing = await db.select().from(testsTable)
+      .where(and(eq(testsTable.batchId, batchId), eq(testsTable.testName, testName))).limit(1);
+    if (existing.length > 0) return;
+
+    const testId = randomUUID();
+    await db.insert(testsTable).values({ id: testId, batchId, testName, testType, classLevel, stream, date, totalMarks });
+
+    const sorted = [...scores].sort((a, b) => b - a);
+    const scopes = ["overall", "weekly", "monthly", "quarterly"];
+
+    const resultRows = students.map((s, i) => {
+      const scored = scores[i] ?? Math.round(totalMarks * 0.7);
+      const pct = Math.round((scored / totalMarks) * 1000) / 10;
+      const rank = sorted.indexOf(scored) + 1;
+      return { id: randomUUID(), studentId: s.studentId, testId, totalScored: scored, percentage: pct, rank, status: "PRESENT" as const,
+        teacherNote: pct >= 75 ? "Great performance!" : pct >= 60 ? "Good effort, keep it up." : "Needs improvement. Review chapters." };
+    });
+
+    await db.insert(studentTestResultsTable).values(resultRows);
+
+    const rankRows = resultRows.flatMap(r =>
+      scopes.map(scope => ({ id: randomUUID(), studentId: r.studentId, testId, scope, rank: r.rank, average: r.percentage }))
+    );
+    await db.insert(rankHistoryTable).values(rankRows);
+  }
+
+  const s12 = students12.map(s => ({ studentId: s.studentId }));
+  const s11 = students11.map(s => ({ studentId: s.studentId }));
+
+  await seedTest(batch12Id, "TWELVE", "SCIENCE_PCM", "Physics Ch1 – Rotational Dynamics", "WEEKLY_CHAPTER",
+    daysAgo(21), 30, s12, [26, 22, 28, 18, 24, 20, 27, 25, 23, 19, 21, 17]);
+
+  await seedTest(batch12Id, "TWELVE", "SCIENCE_PCM", "Chemistry Ch1 – Solid State", "WEEKLY_CHAPTER",
+    daysAgo(14), 30, s12, [24, 27, 20, 25, 19, 28, 22, 26, 18, 23, 21, 16]);
+
+  await seedTest(batch12Id, "TWELVE", "SCIENCE_PCM", "Monthly Test – October", "MONTHLY",
+    daysAgo(7), 100, s12, [78, 82, 65, 74, 58, 88, 70, 76, 62, 80, 72, 55]);
+
+  await seedTest(batch11Id, "ELEVEN", "SCIENCE_PCM", "Physics Ch1 – Vectors", "WEEKLY_CHAPTER",
+    daysAgo(14), 20, s11, [17, 14, 18, 12, 16, 15]);
+
+  await seedTest(batch11Id, "ELEVEN", "SCIENCE_PCM", "Maths Ch1 – Trigonometry II", "WEEKLY_CHAPTER",
+    daysAgo(7), 25, s11, [22, 18, 24, 16, 21, 20]);
+
+  console.log("  ✓ Sample test results seeded");
+
   console.log("\n✅ Seeding complete!\n");
   console.log("👨‍🏫 Teacher:    roman_sir / Roman@123");
-  console.log("🔐 Super Admin: super_admin / RomanAdmin@2026!");
   console.log(`📚 11th Batch: ${students11.length} students`);
   console.log(`📚 12th Batch: ${students12.length} students`);
   console.log("\n📌 Student default password: student@123 (firstLogin=true, will be forced to change)");

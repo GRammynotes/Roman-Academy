@@ -21,16 +21,11 @@ type SubjectGroup = {
   chapters: Chapter[];
 };
 
-const STATUS_LABELS: Record<ChapterStatus, string> = {
-  PENDING: "Not Started",
-  IN_PROGRESS: "In Progress",
-  COMPLETED: "Completed",
-};
-
-const STATUS_COLORS: Record<ChapterStatus, string> = {
-  PENDING: "text-ivory-100/40",
-  IN_PROGRESS: "text-gold-300",
-  COMPLETED: "text-emerald-400",
+type Batch = {
+  id: string;
+  name: string;
+  classLevel: string;
+  stream: string;
 };
 
 const SUBJECT_ICONS: Record<string, string> = {
@@ -197,17 +192,33 @@ function SubjectCard({
 }
 
 export default function ChaptersPage() {
-  const [batchType, setBatchType] = useState("REGULAR");
-  const [classLevel, setClassLevel] = useState("TWELVE");
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [selectedBatch, setSelectedBatch] = useState<string>("");
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const base = import.meta.env.BASE_URL;
+
+  useEffect(() => {
+    fetch(`${base}api/teacher/batches`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setBatches(data);
+          setSelectedBatch(data[0].name);
+        } else {
+          setLoading(false);
+        }
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   const load = () => {
+    if (!selectedBatch) return;
     setLoading(true);
     setError(null);
-    fetch(`${import.meta.env.BASE_URL}api/teacher/chapters?batchType=${batchType}&classLevel=${classLevel}`)
+    fetch(`${base}api/teacher/chapters?batch=${encodeURIComponent(selectedBatch)}`)
       .then(r => {
         if (!r.ok) throw new Error("Failed to load chapters");
         return r.json();
@@ -217,19 +228,20 @@ export default function ChaptersPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { load(); }, [batchType, classLevel]);
+  useEffect(() => { load(); }, [selectedBatch]);
 
   const handleAction = async (chapterId: string, action: "start" | "complete" | "reset") => {
+    if (!selectedBatch) return;
     setActionLoading(true);
     try {
-      const r = await fetch(`${import.meta.env.BASE_URL}api/teacher/chapter-progress`, {
+      const r = await fetch(`${base}api/teacher/chapter-progress`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chapterId, action, batchType, classLevel }),
+        body: JSON.stringify({ chapterId, batchName: selectedBatch, action }),
       });
       if (!r.ok) throw new Error("Action failed");
       await load();
-    } catch (e) {
+    } catch {
       alert("Failed to update chapter. Please try again.");
     } finally {
       setActionLoading(false);
@@ -259,28 +271,17 @@ export default function ChaptersPage() {
 
       <div className="p-4 md:p-6 space-y-5">
         <Card className="border-gold-500/20">
-          <CardContent className="p-4 grid gap-4 sm:grid-cols-2 items-end">
+          <CardContent className="p-4">
             <label className="space-y-1 text-sm text-ivory-100/80">
-              <span className="font-semibold">Batch Type</span>
+              <span className="font-semibold">Select Batch</span>
               <select
-                value={batchType}
-                onChange={e => setBatchType(e.target.value)}
-                className="h-10 w-full rounded-lg border border-gold-500/25 bg-navy-900 px-3 text-sm text-white outline-none focus:ring-2 focus:ring-gold-400/40"
+                value={selectedBatch}
+                onChange={e => setSelectedBatch(e.target.value)}
+                className="h-10 w-full rounded-lg border border-gold-500/25 bg-navy-900 px-3 text-sm text-white outline-none focus:ring-2 focus:ring-gold-400/40 mt-1"
               >
-                <option value="REGULAR">Regular</option>
-                <option value="WEEKEND">Weekend</option>
-                <option value="ONLINE">Online</option>
-              </select>
-            </label>
-            <label className="space-y-1 text-sm text-ivory-100/80">
-              <span className="font-semibold">Class</span>
-              <select
-                value={classLevel}
-                onChange={e => setClassLevel(e.target.value)}
-                className="h-10 w-full rounded-lg border border-gold-500/25 bg-navy-900 px-3 text-sm text-white outline-none focus:ring-2 focus:ring-gold-400/40"
-              >
-                <option value="TWELVE">12th Standard</option>
-                <option value="ELEVEN">11th Standard</option>
+                {batches.map(b => (
+                  <option key={b.id} value={b.name}>{b.name}</option>
+                ))}
               </select>
             </label>
           </CardContent>
@@ -331,7 +332,7 @@ export default function ChaptersPage() {
           <div className="text-center py-16 text-ivory-100/40">
             <BookOpen className="size-10 mx-auto mb-3 text-gold-400/30" />
             <p className="font-semibold">No chapters found</p>
-            <p className="text-xs mt-1">Try a different batch or class selection.</p>
+            <p className="text-xs mt-1">No chapters are set up for this batch yet.</p>
           </div>
         ) : (
           <div className="space-y-4">

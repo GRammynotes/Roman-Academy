@@ -84,13 +84,13 @@ export default function AdminStudents() {
   const load = () => {
     setLoading(true);
     fetch(`${import.meta.env.BASE_URL}api/admin/students?stream=${stream}&classLevel=${classLevel}`)
-      .then(r => r.json()).then(setStudents).catch(() => setStudents([])).finally(() => setLoading(false));
+      .then(r => r.json()).then(data => setStudents(Array.isArray(data) ? data : [])).catch(() => setStudents([])).finally(() => setLoading(false));
   };
 
   const loadArchived = () => {
     setArchivedLoading(true);
     fetch(`${import.meta.env.BASE_URL}api/admin/archived-students`)
-      .then(r => r.json()).then(setArchived).catch(() => setArchived([])).finally(() => setArchivedLoading(false));
+      .then(r => r.json()).then(data => setArchived(Array.isArray(data) ? data : [])).catch(() => setArchived([])).finally(() => setArchivedLoading(false));
   };
 
   useEffect(() => { load(); }, [stream, classLevel]);

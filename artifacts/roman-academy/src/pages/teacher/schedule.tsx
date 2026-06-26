@@ -21,7 +21,7 @@ const TEST_TYPES = [
   { value: "REVISION_TEST",   label: "Revision Test" },
 ];
 
-const CHAPTERS: Record<string, { no: number; name: string }[]> = {
+const CHAPTERS_11: Record<string, { no: number; name: string }[]> = {
   Physics: [
     { no: 1,  name: "Motion in a Plane" },
     { no: 2,  name: "Laws of Motion" },
@@ -58,6 +58,63 @@ const CHAPTERS: Record<string, { no: number; name: string }[]> = {
   ],
 };
 
+const CHAPTERS_12: Record<string, { no: number; name: string }[]> = {
+  Physics: [
+    { no: 1,  name: "Rotational Dynamics" },
+    { no: 2,  name: "Mechanical Properties of Fluids" },
+    { no: 3,  name: "Kinetic Theory of Gases & Radiation" },
+    { no: 4,  name: "Thermodynamics" },
+    { no: 5,  name: "Oscillations" },
+    { no: 6,  name: "Superposition of Waves" },
+    { no: 7,  name: "Wave Optics" },
+    { no: 8,  name: "Electrostatics" },
+    { no: 9,  name: "Current Electricity" },
+    { no: 10, name: "Magnetic Effects of Electric Current" },
+    { no: 11, name: "Magnetic Materials" },
+    { no: 12, name: "Electromagnetic Induction" },
+    { no: 13, name: "AC Circuits" },
+    { no: 14, name: "Dual Nature of Radiation and Matter" },
+    { no: 15, name: "Structure of Atoms and Nuclei" },
+    { no: 16, name: "Semiconductor Devices" },
+  ],
+  Chemistry: [
+    { no: 1,  name: "Solid State" },
+    { no: 2,  name: "Solutions and Colligative Properties" },
+    { no: 3,  name: "Chemical Thermodynamics and Energetics" },
+    { no: 4,  name: "Electrochemistry" },
+    { no: 5,  name: "Chemical Kinetics" },
+    { no: 6,  name: "General Principles and Processes of Isolation of Elements" },
+    { no: 7,  name: "p-Block Elements" },
+    { no: 8,  name: "d and f Block Elements" },
+    { no: 9,  name: "Coordination Compounds" },
+    { no: 10, name: "Halogen Derivatives of Alkanes and Arenes" },
+    { no: 11, name: "Alcohols, Phenols and Ethers" },
+    { no: 12, name: "Aldehydes, Ketones and Carboxylic Acids" },
+    { no: 13, name: "Amines" },
+    { no: 14, name: "Biomolecules" },
+    { no: 15, name: "Introduction to Polymer Chemistry" },
+    { no: 16, name: "Green Chemistry and Nanochemistry" },
+  ],
+  Mathematics: [
+    { no: 1,  name: "Mathematical Logic" },
+    { no: 2,  name: "Matrices" },
+    { no: 3,  name: "Trigonometric Functions" },
+    { no: 4,  name: "Pair of Straight Lines" },
+    { no: 5,  name: "Vectors" },
+    { no: 6,  name: "Line and Plane" },
+    { no: 7,  name: "Linear Programming" },
+    { no: 8,  name: "Differentiation" },
+    { no: 9,  name: "Applications of Derivatives" },
+    { no: 10, name: "Integration" },
+    { no: 11, name: "Applications of Definite Integration" },
+    { no: 12, name: "Differential Equations" },
+    { no: 13, name: "Probability Distribution" },
+    { no: 14, name: "Binomial Distribution" },
+    { no: 15, name: "Statistics" },
+    { no: 16, name: "Bernoulli Trials" },
+  ],
+};
+
 const SELECT_CLS = "h-10 w-full rounded-lg border border-gold-500/25 bg-navy-900 px-3 text-sm text-white outline-none focus:ring-2 focus:ring-gold-400/40";
 
 export default function SchedulePage() {
@@ -68,9 +125,12 @@ export default function SchedulePage() {
     batchName: "12th Science 2026",
     testName: "",
     testType: "WEEKLY_CHAPTER",
-    chapter: "Ch 1 – Motion in a Plane",
+    chapter: "Ch 1 – Rotational Dynamics",
     scheduledDate: "",
   });
+
+  const is12th = form.batchName.startsWith("12th");
+  const CHAPTERS = is12th ? CHAPTERS_12 : CHAPTERS_11;
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -80,6 +140,13 @@ export default function SchedulePage() {
       .then(r => r.json()).then(data => setItems(Array.isArray(data) ? data : [])).catch(() => setItems([])).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
+
+  const handleBatchChange = (batchName: string) => {
+    const newIs12th = batchName.startsWith("12th");
+    const newChapters = newIs12th ? CHAPTERS_12 : CHAPTERS_11;
+    const first = newChapters[subject][0];
+    setForm(f => ({ ...f, batchName, chapter: `Ch ${first.no} – ${first.name}` }));
+  };
 
   const handleSubjectChange = (s: string) => {
     setSubject(s);
@@ -113,11 +180,11 @@ export default function SchedulePage() {
 
   const testTypeBadge = (type: string) => {
     if (type === "WEEKLY_CHAPTER") return "gold";
-    if (type === "MONTHLY") return "blue";
-    if (type === "QUARTERLY") return "green";
-    if (type === "FULL_LENGTH_MOCK") return "purple";
-    if (type === "REVISION_TEST") return "red";
-    return "neutral";
+    if (type === "MONTHLY") return "info";
+    if (type === "QUARTERLY") return "success";
+    if (type === "FULL_LENGTH_MOCK") return "warn";
+    if (type === "REVISION_TEST") return "danger";
+    return "navy";
   };
 
   const testTypeLabel = (type: string) =>
@@ -158,7 +225,7 @@ export default function SchedulePage() {
 
             <label className="space-y-1 text-sm text-ivory-100/80 block">
               <span className="font-semibold">Batch</span>
-              <select value={form.batchName} onChange={e => setForm(f => ({ ...f, batchName: e.target.value }))} className={SELECT_CLS}>
+              <select value={form.batchName} onChange={e => handleBatchChange(e.target.value)} className={SELECT_CLS}>
                 <option>12th Science 2026</option>
                 <option>11th Science 2026</option>
               </select>
@@ -174,7 +241,7 @@ export default function SchedulePage() {
             </label>
 
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-ivory-100/80">Chapter (Class 11)</p>
+              <p className="text-sm font-semibold text-ivory-100/80">Chapter ({is12th ? "Class 12" : "Class 11"})</p>
               <div className="flex gap-2">
                 {Object.keys(CHAPTERS).map(s => (
                   <button

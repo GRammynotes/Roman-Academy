@@ -1028,10 +1028,18 @@ router.get("/teacher/chapters", requireRole(["teacher"]), async (req: any, res) 
       }
     }
 
-    return res.json(chapters.map(ch => ({
-      ...ch,
-      progress: progressMap[ch.id] ?? { status: "PENDING", startedAt: null, completedAt: null },
-    })));
+    return res.json(chapters.map(ch => {
+      const prog = progressMap[ch.id] ?? { status: "PENDING", startedAt: null, completedAt: null };
+      return {
+        id: ch.id,
+        name: ch.chapterName,
+        subject: ch.subject,
+        orderIndex: ch.orderIndex,
+        status: prog.status === "ONGOING" ? "IN_PROGRESS" : prog.status,
+        startedAt: prog.startedAt,
+        completedAt: prog.completedAt,
+      };
+    }));
   } catch (err) {
     logger.error({ err }, "Chapters error");
     return res.status(500).json({ error: "Internal server error" });
@@ -1046,8 +1054,8 @@ router.post("/teacher/chapter-progress", requireRole(["teacher"]), async (req: a
     if (!chapterId || !batchName || !action) {
       return res.status(400).json({ error: "Missing chapterId, batchName, or action" });
     }
-    if (!["start", "complete"].includes(action)) {
-      return res.status(400).json({ error: "action must be 'start' or 'complete'" });
+    if (!["start", "complete", "reset"].includes(action)) {
+      return res.status(400).json({ error: "action must be 'start', 'complete', or 'reset'" });
     }
 
     const batch = await db.select().from(batchesTable).where(eq(batchesTable.name, batchName)).limit(1);
@@ -1060,7 +1068,13 @@ router.post("/teacher/chapter-progress", requireRole(["teacher"]), async (req: a
     const now = new Date();
     const teacherId = req.userId;
 
-    if (existing[0]) {
+    if (action === "reset") {
+      if (existing[0]) {
+        await db.update(chapterProgressTable)
+          .set({ status: "PENDING", startedAt: null, completedAt: null, updatedAt: now })
+          .where(eq(chapterProgressTable.id, existing[0].id));
+      }
+    } else if (existing[0]) {
       const updates: any = { updatedAt: now };
       if (action === "start") {
         updates.status = "ONGOING";

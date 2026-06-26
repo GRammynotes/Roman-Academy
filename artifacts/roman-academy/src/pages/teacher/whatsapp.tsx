@@ -29,7 +29,7 @@ export default function WhatsAppPage() {
   const fetchDrafts = () => {
     setLoading(true);
     fetch(`${BASE}api/teacher/whatsapp`)
-      .then(r => r.json()).then(setDrafts).catch(() => setDrafts([])).finally(() => setLoading(false));
+      .then(r => r.json()).then(data => setDrafts(Array.isArray(data) ? data : [])).catch(() => setDrafts([])).finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchDrafts(); }, []);
