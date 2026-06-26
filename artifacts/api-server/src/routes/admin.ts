@@ -119,6 +119,22 @@ router.get("/admin/archived-students", requireRole(["teacher", "admin"]), async 
   }
 });
 
+router.patch("/admin/students/:id/archive", requireRole(["teacher", "admin"]), async (req: any, res) => {
+  try {
+    const { id } = req.params;
+    const existing = await db.select({ id: studentsTable.id })
+      .from(studentsTable)
+      .where(and(eq(studentsTable.id, id), eq(studentsTable.archived, false)))
+      .limit(1);
+    if (!existing.length) return res.status(404).json({ error: "Active student not found" });
+    await db.update(studentsTable).set({ archived: true }).where(eq(studentsTable.id, id));
+    return res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Admin archive student error");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.patch("/admin/students/:id/restore", requireRole(["teacher", "admin"]), async (req: any, res) => {
   try {
     const { id } = req.params;

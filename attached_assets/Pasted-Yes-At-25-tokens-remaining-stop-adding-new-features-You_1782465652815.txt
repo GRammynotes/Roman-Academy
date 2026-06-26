@@ -1,0 +1,275 @@
+Yes. At **25% tokens remaining**, stop adding new features. Your objective is to leave the project in a **fully working, testable state**, not with more unfinished pages.
+
+From everything we've discussed over the last few weeks, here's the **highest ROI order**.
+
+---
+
+# 🔴 PRIORITY 1 (Must Complete Before Tokens End)
+
+These are mandatory.
+
+## 1. Verify the complete academic workflow (MOST IMPORTANT)
+
+Don't build anything.
+
+Test the existing system.
+
+Verify:
+
+* ✅ 11th batch
+* ✅ 12th batch
+* ✅ Leaderboard
+* ✅ Upload Marks
+* ✅ Student Dashboard
+* ✅ Teacher Dashboard
+* ✅ Progress page
+* ✅ Graphs
+* ✅ Notifications
+
+Upload one **sample 11th test** and one **sample 12th test**.
+
+Confirm:
+
+```
+Upload Marks
+
+↓
+
+Database
+
+↓
+
+Leaderboard
+
+↓
+
+Dashboard
+
+↓
+
+Graphs
+
+↓
+
+Analytics
+```
+
+works perfectly.
+
+This is **the biggest risk** before production.
+
+---
+
+## 2. Verify the 60% syllabus fix
+
+Don't assume.
+
+Actually verify:
+
+Fresh database
+
+↓
+
+Student Progress API
+
+↓
+
+returns
+
+```
+0%
+```
+
+Complete one chapter
+
+↓
+
+returns expected percentage.
+
+This must be tested.
+
+---
+
+## 3. Finish Chapter Progress
+
+This is the core feature.
+
+Teacher should:
+
+```
+Batch
+
+↓
+
+Subject
+
+↓
+
+Chapter
+
+↓
+
+Start
+
+↓
+
+Complete
+```
+
+System updates:
+
+* progress
+* notifications
+* next chapter
+
+This is worth far more than mobile polish.
+
+---
+
+# 🟠 PRIORITY 2
+
+## Restore Student
+
+Finish it.
+
+Archive
+
+↓
+
+Restore
+
+↓
+
+Verify:
+
+* login
+* leaderboard
+* upload marks
+* analytics
+
+---
+
+## Test automations
+
+Verify:
+
+Weekly
+
+↓
+
+Monthly
+
+↓
+
+Quarterly
+
+actually generate correct chapters.
+
+Don't redesign.
+
+Just verify and fix.
+
+---
+
+# 🟡 PRIORITY 3
+
+Now verify
+
+NOT create.
+
+Verify:
+
+* theme toggle
+* dark mode
+* light mode
+* localStorage
+
+If broken
+
+fix only the bug.
+
+---
+
+# 🟢 PRIORITY 4
+
+Landing page mobile.
+
+Only after everything above works.
+
+This can wait if tokens are low.
+
+---
+
+# ❌ DO NOT SPEND TOKENS ON
+
+Don't create:
+
+* fancy animations
+* new dashboards
+* new analytics
+* redesigns
+* new admin panels
+* extra pages
+
+Those are Phase 2.
+
+---
+
+# VERY IMPORTANT
+
+Before the conversation ends tell Replit:
+
+Run a full production verification.
+
+Return ONLY:
+
+```
+✓ Working Features
+
+✓ Broken Features
+
+✓ Sample Tests Executed
+
+✓ API Tests
+
+✓ Leaderboard Tests
+
+✓ Student Dashboard Tests
+
+✓ Teacher Dashboard Tests
+
+✓ Files Modified
+
+✓ Git Commands
+
+✓ Deployment Steps
+
+✓ Remaining Known Bugs
+```
+
+---
+
+# Final Priority List
+
+| Priority | Task                                          | Do Now? |
+| -------- | --------------------------------------------- | ------- |
+| 🔴       | Verify upload marks → leaderboard → dashboard | ✅ YES   |
+| 🔴       | Verify syllabus completion bug                | ✅ YES   |
+| 🔴       | Finish Chapter Progress                       | ✅ YES   |
+| 🔴       | Sample 11th & 12th test upload                | ✅ YES   |
+| 🟠       | Restore Student                               | ✅ YES   |
+| 🟠       | Weekly → Monthly → Quarterly validation       | ✅ YES   |
+| 🟡       | Theme toggle bug                              | If time |
+| 🟢       | Mobile responsive polish                      | If time |
+| ⚪        | Animations/UI enhancements                    | Later   |
+
+---
+
+## One more thing (very important)
+
+**Do NOT let it spend the remaining tokens generating code without testing.**
+
+At this point, every token should be used to **verify end-to-end workflows** rather than adding features. A production system with verified functionality is far more valuable than one with extra pages but untested data flow.
+
+**Confidence:** 0.99
+**Key caveat:** If you have only 25% of the context window left, use it for **verification and bug fixing**, not feature expansion. That's the highest-value use of the remaining budget.
