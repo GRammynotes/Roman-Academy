@@ -1,0 +1,294 @@
+CONTINUE FROM PREVIOUS TASKS.
+
+DO NOT restart analysis.
+DO NOT repeat completed work.
+Read the existing work plan, completed changes, migrations, and current branch state first.
+
+Completed so far:
+
+✓ Academic schema migration completed
+✓ Production reset completed
+✓ Official syllabus seeded
+✓ Student archive (soft delete) implemented
+✓ Typecheck passing
+✓ Leaderboard fixes partially completed
+
+FIRST TASK:
+
+Review all previously planned work and compare against what has actually been implemented.
+
+Return:
+
+1. COMPLETED TASKS
+2. PARTIALLY COMPLETED TASKS
+3. NOT STARTED TASKS
+4. BUGS FOUND
+5. FILES CURRENTLY MODIFIED
+
+Then continue implementation only for missing items.
+
+---
+
+## CRITICAL VALIDATION TASKS
+
+Before building anything else:
+
+Investigate why syllabus completion is still showing 60%.
+
+The database was reset.
+
+All chapter progress should have been reset.
+
+Verify:
+
+* student progress API
+* chapter completion queries
+* dashboard stats
+* analytics calculations
+* cached values
+* seeded data
+
+Find root cause.
+
+Do not hardcode values.
+
+Show actual query being used.
+
+Fix permanently.
+
+---
+
+## ACADEMIC SYSTEM VALIDATION
+
+Verify the entire academic workflow works correctly.
+
+Test:
+
+11th batch
+
+12th batch
+
+Weekly tests
+
+Monthly tests
+
+Quarterly tests
+
+Leaderboard generation
+
+Student progress calculations
+
+Chapter completion tracking
+
+Teacher analytics
+
+Student analytics
+
+Notifications
+
+Upload Marks
+
+Confirm all relationships are working.
+
+---
+
+## TEST AUTOMATION VALIDATION
+
+Verify that the following logic is actually implemented:
+
+Weekly Test
+→ completed chapters only
+
+Monthly Test
+→ chapters completed during that month
+
+Quarterly Test
+→ chapters completed during that quarter
+
+If not implemented:
+
+Implement it using existing schema.
+
+No hardcoding.
+
+Teacher approval required before publishing tests.
+
+---
+
+## UPLOAD MARKS VALIDATION
+
+Create sample tests:
+
+1 for 11th
+
+1 for 12th
+
+Upload sample marks.
+
+Verify:
+
+* student dashboards update
+* graphs update
+* rankings update
+* leaderboard updates
+* analytics updates
+
+Important:
+
+If a student is missing from upload sheet:
+
+marks = 0
+
+status = ABSENT
+
+must be automatically generated.
+
+Verify this behavior.
+
+---
+
+## CHAPTER PROGRESS PAGE
+
+If not already completed:
+
+Create Teacher Chapter Progress page.
+
+Requirements:
+
+Teacher Dashboard
+→ Chapter Progress
+
+Features:
+
+* batch selector
+* subject selector
+* chapter list
+* mark ongoing
+* mark completed
+* completion timestamps
+* syllabus percentage
+* next chapter recommendation
+
+Support:
+
+Physics ongoing
+Chemistry ongoing
+Maths ongoing
+
+simultaneously.
+
+Teacher must approve next chapter.
+
+---
+
+## RESTORE STUDENT SYSTEM
+
+If not already completed:
+
+Add Archived Students section.
+
+Features:
+
+* view archived students
+* restore student
+* active count
+* archived count
+
+After restore verify:
+
+* login works
+* leaderboard works
+* marks upload works
+* notifications work
+
+---
+
+## THEME TOGGLE
+
+I have requested this multiple times.
+
+Audit theme implementation.
+
+Verify:
+
+* toggle exists
+* toggle visible
+* dark mode works
+* light mode works
+* persistence works
+* localStorage works
+* all pages respect theme
+
+If broken:
+
+Fix properly.
+
+Do not leave placeholder implementation.
+
+---
+
+## MOBILE RESPONSIVENESS
+
+Audit entire landing page.
+
+Check:
+
+* Hero
+* Navbar
+* Faculty
+* Gallery
+* Results
+* Contact
+* Footer
+
+Test widths:
+
+320px
+375px
+425px
+768px
+
+Fix overflow, spacing, typography, layout issues.
+
+Keep Roman Academy branding.
+
+---
+
+## FINAL VALIDATION
+
+Before stopping:
+
+Generate a report:
+
+✓ Working Features
+✓ Fixed Bugs
+✓ Remaining Issues
+✓ Test Results
+✓ Files Modified
+✓ Migrations Added
+
+Then provide:
+
+Git Commands:
+
+git status
+git add -A
+git commit -m "Final academic workflow, chapter progress, theme fixes, restore students"
+git push origin main
+
+Also provide:
+
+1. Production deployment checklist
+2. Vercel redeploy steps
+3. Render backend redeploy steps
+4. Neon database verification steps
+
+IMPORTANT:
+
+Do not assume anything is working.
+
+Verify every workflow end-to-end before marking it complete.
+
+If a feature already exists and works, do not rebuild it.
+
+Improve only missing or broken parts.

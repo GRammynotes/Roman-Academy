@@ -16,6 +16,7 @@ const UploadMarksPage  = lazy(() => import("@/pages/teacher/upload-marks"));
 const WhatsAppPage     = lazy(() => import("@/pages/teacher/whatsapp"));
 const SchedulePage     = lazy(() => import("@/pages/teacher/schedule"));
 const SettingsPage     = lazy(() => import("@/pages/teacher/settings"));
+const ChaptersPage     = lazy(() => import("@/pages/teacher/chapters"));
 
 const StudentDashboard = lazy(() => import("@/pages/student/dashboard"));
 const StudentTests     = lazy(() => import("@/pages/student/tests"));
@@ -50,6 +51,7 @@ function Router() {
         <Route path="/teacher/students" component={TeacherStudents} />
         <Route path="/teacher/upload-marks" component={UploadMarksPage} />
         <Route path="/teacher/whatsapp" component={WhatsAppPage} />
+        <Route path="/teacher/chapters" component={ChaptersPage} />
         <Route path="/teacher/schedule" component={SchedulePage} />
         <Route path="/teacher/settings" component={SettingsPage} />
 

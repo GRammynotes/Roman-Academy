@@ -15,12 +15,10 @@ function getStoredTheme(): Theme {
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
-  if (theme === "light") {
-    root.classList.add("ra-light");
-    root.classList.remove("ra-dark");
+  if (theme === "dark") {
+    root.classList.add("dark");
   } else {
-    root.classList.add("ra-dark");
-    root.classList.remove("ra-light");
+    root.classList.remove("dark");
   }
   try { localStorage.setItem("ra_theme", theme); } catch {}
   window.dispatchEvent(new CustomEvent("ra-theme-change", { detail: theme }));

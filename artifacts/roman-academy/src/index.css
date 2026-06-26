@@ -113,23 +113,23 @@
 
 /* LIGHT MODE */
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
+  --button-outline: rgba(0,0,0, .12);
+  --badge-outline: rgba(0,0,0, .06);
 
   /* Automatic computation of border around primary / danger buttons */
   --opaque-button-border-intensity: -8; /* In terms of percentages */
 
   /* Backgrounds applied on top of other backgrounds when hovered/active */
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --elevate-1: rgba(0,0,0, .04);
+  --elevate-2: rgba(0,0,0, .09);
 
-  --background: 222 47% 7%;
-  --foreground: 48 100% 96%;
-  --border: 220 30% 20%;
-  --card: 222 40% 10%;
-  --card-foreground: 48 100% 96%;
-  --card-border: 220 30% 18%;
-  --sidebar: 222 47% 7%;
+  --background: 40 30% 96%;
+  --foreground: 222 47% 12%;
+  --border: 222 20% 82%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 12%;
+  --card-border: 222 20% 86%;
+  --sidebar: 222 47% 9%;
   --sidebar-foreground: 48 100% 90%;
   --sidebar-border: 220 30% 18%;
   --sidebar-primary: 43 61% 52%;
@@ -137,26 +137,26 @@
   --sidebar-accent: 220 30% 16%;
   --sidebar-accent-foreground: 48 100% 96%;
   --sidebar-ring: 43 61% 52%;
-  --popover: 222 40% 10%;
-  --popover-foreground: 48 100% 96%;
-  --popover-border: 220 30% 18%;
-  --primary: 43 61% 52%;
-  --primary-foreground: 222 47% 7%;
-  --secondary: 220 30% 16%;
-  --secondary-foreground: 48 100% 90%;
-  --muted: 220 30% 14%;
-  --muted-foreground: 48 30% 60%;
-  --accent: 220 30% 16%;
-  --accent-foreground: 48 100% 96%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 12%;
+  --popover-border: 222 20% 86%;
+  --primary: 43 61% 46%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 222 20% 92%;
+  --secondary-foreground: 222 47% 12%;
+  --muted: 220 20% 94%;
+  --muted-foreground: 222 30% 42%;
+  --accent: 220 20% 92%;
+  --accent-foreground: 222 47% 12%;
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
-  --input: 220 30% 22%;
-  --ring: 43 61% 52%;
-  --chart-1: 43 61% 52%;
-  --chart-2: 142 71% 45%;
-  --chart-3: 217 91% 60%;
+  --input: 222 20% 88%;
+  --ring: 43 61% 46%;
+  --chart-1: 43 61% 46%;
+  --chart-2: 142 71% 35%;
+  --chart-3: 217 91% 50%;
   --chart-4: 0 72% 51%;
-  --chart-5: 280 65% 60%;
+  --chart-5: 280 65% 50%;
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;

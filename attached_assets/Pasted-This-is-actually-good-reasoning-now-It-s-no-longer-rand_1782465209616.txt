@@ -1,0 +1,116 @@
+This is actually **good reasoning now**. It's no longer randomly changing things—it is tracing the root cause.
+
+However, **stop it before it starts killing processes or changing ports**. It is about to go from debugging into guessing.
+
+### What it got right ✅
+
+* It identified that **two Vite dev servers** are running.
+* It recognized the **circular proxy problem** (`/api` proxy → localhost:8080 while Vite itself is on 8080).
+* It realized the issue is probably **development workflow**, not your application code.
+* It switched from "I'll move everything to 3001" to "I'll inspect what's actually running."
+
+That's exactly the right direction.
+
+---
+
+## Where it's about to make a mistake ❌
+
+These statements worry me:
+
+> "Kill the process on 8080"
+
+> "Start the API immediately before Vite"
+
+> "Race condition"
+
+Those are workarounds, **not fixes**.
+
+Your project should not depend on startup timing.
+
+---
+
+# Tell Replit this
+
+Copy this short message:
+
+> Do not use process killing or startup race conditions as the solution.
+>
+> First determine the intended development architecture.
+>
+> Verify:
+>
+> 1. Which workflow should run the frontend?
+> 2. Which workflow should run the Express API?
+> 3. Why are there two Vite dev servers (`Roman Academy Frontend` and `artifacts/roman-academy:web`)?
+> 4. Is one of them obsolete or duplicated?
+> 5. Which service is supposed to own `PORT=8080`?
+> 6. Is the conflict caused by duplicate workflows rather than application code?
+>
+> After answering those questions, propose the smallest fix instead of killing processes.
+
+---
+
+## What I suspect is happening
+
+Based on everything you've shared over the last week:
+
+You probably have **duplicate frontend workflows**.
+
+Something like:
+
+```
+Workflow A
+Roman Academy Frontend
+→ vite
+
+Workflow B
+artifacts/roman-academy:web
+→ vite
+```
+
+Both start the same application.
+
+One grabs 5173.
+
+The other falls back to 8080.
+
+Then Express can't start.
+
+That would explain **every symptom**.
+
+---
+
+## Before changing any code, I want Replit to answer:
+
+```
+Current running workflows:
+
+Workflow 1:
+command:
+working directory:
+expected port:
+
+Workflow 2:
+command:
+working directory:
+expected port:
+
+Workflow 3:
+command:
+working directory:
+expected port:
+```
+
+Then identify which one is redundant.
+
+---
+
+## My confidence
+
+**90%** that this is **not** an Express problem or a Vite config problem anymore.
+
+It looks like a **Replit workflow configuration issue** (duplicate frontend processes), and fixing the workflows is much safer than rewriting ports or adding startup scripts.
+
+**Confidence:** 0.90
+
+**Key caveat:** Don't let it "fix" the symptom by killing processes. Make it identify why two frontend servers exist in the first place. That will lead to a stable solution instead of one that only works after a specific startup sequence.
