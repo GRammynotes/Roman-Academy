@@ -25,7 +25,7 @@ const StudentProfile   = lazy(() => import("@/pages/student/profile"));
 const StudentSettings  = lazy(() => import("@/pages/student/settings"));
 const StudentSupport   = lazy(() => import("@/pages/student/support"));
 
-const AdminStudents    = lazy(() => import("@/pages/admin/students"));
+const SearchReports    = lazy(() => import("@/pages/admin/students"));
 const TeacherAccess    = lazy(() => import("@/pages/teacher-access"));
 const ChangePassword   = lazy(() => import("@/pages/change-password"));
 
@@ -63,7 +63,7 @@ function Router() {
         <Route path="/student/support" component={StudentSupport} />
 
         <Route path="/change-password" component={ChangePassword} />
-        <Route path="/admin/students" component={AdminStudents} />
+        <Route path="/admin/students" component={SearchReports} />
         <Route path="/teacher-access" component={TeacherAccess} />
 
         <Route component={NotFound} />

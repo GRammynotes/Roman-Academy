@@ -66,7 +66,7 @@ async function resetSampleData() {
     const updated = await db
       .update(usersTable)
       .set({ firstLogin: true })
-      .where(ne(usersTable.username, "super_admin"))
+      .where(ne(usersTable.role, "TEACHER"))
       .returning({ username: usersTable.username });
     console.log(`  ✓ Reset firstLogin for ${updated.length} accounts`);
 

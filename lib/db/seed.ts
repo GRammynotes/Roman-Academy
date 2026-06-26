@@ -9,8 +9,7 @@ import { eq, and, inArray } from "drizzle-orm";
 import * as bcryptjs from "bcryptjs";
 import { randomUUID } from "crypto";
 
-const TEACHER_ID      = "f77cf0ed-8ac3-4e83-8f5c-603b56e52b34";
-const SUPER_ADMIN_ID  = "00000000-0000-0000-0000-000000000001";
+const TEACHER_ID = "f77cf0ed-8ac3-4e83-8f5c-603b56e52b34";
 
 function daysAgo(n: number) { const d = new Date(); d.setDate(d.getDate() - n); return d; }
 function daysFromNow(n: number) { const d = new Date(); d.setDate(d.getDate() + n); return d; }
@@ -295,20 +294,6 @@ async function assignChaptersBatch(
 
 async function seed() {
   console.log("\n🌱 Seeding Roman Academy database...\n");
-
-  // ── Super Admin ───────────────────────────────────────────────────────────
-  console.log("🔐 Super Admin");
-  const existingSuperAdmin = await db.select().from(usersTable).where(eq(usersTable.id, SUPER_ADMIN_ID)).limit(1);
-  if (existingSuperAdmin.length === 0) {
-    const superHash = await bcryptjs.hash("RomanAdmin@2026!", 10);
-    await db.insert(usersTable).values({
-      id: SUPER_ADMIN_ID, username: "super_admin", passwordHash: superHash,
-      role: "TEACHER", firstLogin: false, isDemo: false,
-    });
-    console.log("  ✓ Super admin created");
-  } else {
-    console.log("  ✓ Super admin already exists");
-  }
 
   // ── Teacher ───────────────────────────────────────────────────────────────
   console.log("👤 Teacher");

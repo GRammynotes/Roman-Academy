@@ -4,7 +4,7 @@
  * PURPOSE: Clean academic year start.
  *
  * PRESERVES:
- *   - Teacher accounts (roman_sir, super_admin)
+ *   - Teacher account (roman_sir)
  *   - Student profiles and user accounts
  *   - Batch structure
  *   - Chapter definitions

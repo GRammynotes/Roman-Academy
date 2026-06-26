@@ -20,12 +20,13 @@ import { cn } from "@/lib/utils";
 import { Lightfall } from "@/components/ui/lightfall";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
-type ShellRole = "teacher" | "student" | "admin";
+type ShellRole = "teacher" | "student";
 
 const teacherNavItems = [
   { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
   { href: "/teacher/upload-marks", label: "Upload Marks", icon: Upload },
   { href: "/teacher/students", label: "Manage Students", icon: Users },
+  { href: "/admin/students", label: "Search & Reports", icon: Search },
   { href: "/teacher/chapters", label: "Chapter Progress", icon: LineChart },
   { href: "/teacher/whatsapp", label: "WhatsApp Queue", icon: MessageSquareText },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
@@ -50,22 +51,6 @@ const teacherMobileItems = [
   { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
   { href: "/teacher/upload-marks", label: "Upload", icon: Upload },
   { href: "/teacher/students", label: "Students", icon: Users },
-  { href: "/teacher/settings", label: "Settings", icon: Settings },
-];
-
-const adminNavItems = [
-  { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/students", label: "Search & Reports", icon: Search },
-  { href: "/teacher/upload-marks", label: "Upload Marks", icon: Upload },
-  { href: "/teacher/students", label: "Manage Students", icon: Users },
-  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-  { href: "/teacher/settings", label: "Settings", icon: Settings },
-];
-
-const adminMobileItems = [
-  { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/students", label: "Search", icon: Search },
-  { href: "/teacher/upload-marks", label: "Upload", icon: Upload },
   { href: "/teacher/settings", label: "Settings", icon: Settings },
 ];
 
@@ -116,10 +101,8 @@ export function AppShell({
 
   const currentPath = active || location;
 
-  const desktopNavItems =
-    role === "admin" ? adminNavItems : role === "teacher" ? teacherNavItems : studentNavItems;
-  const mobileNavItems =
-    role === "admin" ? adminMobileItems : role === "teacher" ? teacherMobileItems : studentMobileItems;
+  const desktopNavItems = role === "teacher" ? teacherNavItems : studentNavItems;
+  const mobileNavItems = role === "teacher" ? teacherMobileItems : studentMobileItems;
 
   return (
     <div className="relative flex h-screen flex-col lg:flex-row bg-navy-950">

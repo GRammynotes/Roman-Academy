@@ -1,0 +1,342 @@
+This is a good point to hand off to another Replit Agent. The new agent can inspect the code itself, so don't waste context explaining the architecture again. Instead, give it the **project state, verified findings, remaining bugs, priorities, and expected behavior**.
+
+Use this:
+
+# ROMAN ACADEMY – CONTINUE FROM CURRENT PROJECT STATE
+
+The repository is already connected.
+
+Read the existing codebase yourself.
+
+Do NOT spend time re-reading architecture or regenerating documentation.
+
+Do NOT rebuild existing features.
+
+Do NOT recreate database schema.
+
+Do NOT recreate authentication.
+
+Do NOT redesign UI.
+
+Assume previous work is already implemented unless runtime proves otherwise.
+
+---
+
+# CURRENT VERIFIED PROJECT STATUS
+
+Tech Stack
+
+* React + Vite
+* Express API
+* Drizzle ORM
+* Neon PostgreSQL
+* Vercel (Frontend)
+* Render (Backend)
+
+Deployment already exists.
+
+Production database exists.
+
+Academic schema migration completed.
+
+Database reset completed.
+
+Official syllabus seeded.
+
+Student archive system implemented.
+
+Restore student partially implemented.
+
+Chapter Progress APIs exist.
+
+Theme toggle partially fixed.
+
+Progress calculation no longer uses the hardcoded 60%.
+
+---
+
+# VERIFIED DATA
+
+Current active students:
+
+11th Science = 6
+
+12th Science = 14
+
+Total = 20
+
+This is CORRECT.
+
+Two additional students (Kunal Datkhile and Tanvi Datkhile) are intentional.
+
+Do NOT delete or archive them.
+
+---
+
+# VERIFIED WORKING
+
+* Database connection
+* Academic year
+* Subjects
+* Chapters
+* Chapter assignments
+* Upload Marks accepts Name + Score format
+* Sample uploads successfully inserted test results
+* Chapter Progress API returns chapter data
+* Syllabus percentage is calculated dynamically
+
+---
+
+# VERIFIED BUGS
+
+## 1. Leaderboard
+
+Current issue:
+
+Upload creates rank history with:
+
+scope = "overall"
+
+Leaderboard queries:
+
+WEEKLY
+MONTHLY
+QUARTERLY
+
+Result:
+
+Leaderboard returns empty despite existing marks.
+
+Investigate the correct design.
+
+Either:
+
+* generate scope-specific rank history during upload
+
+OR
+
+* redesign leaderboard query
+
+Do NOT hardcode.
+
+Use proper academic logic.
+
+---
+
+## 2. Archive / Restore
+
+Current UI exists.
+
+Restore endpoint exists.
+
+Archive endpoint appears missing or mismatched.
+
+Teacher UI calls archive endpoint that returns 404.
+
+Investigate actual routes.
+
+Implement correctly.
+
+Verify:
+
+Archive
+
+↓
+
+Restore
+
+↓
+
+Login
+
+↓
+
+Leaderboard
+
+↓
+
+Upload Marks
+
+↓
+
+Dashboard
+
+still work.
+
+---
+
+## 3. Super Admin Role
+
+Investigate why super_admin is treated as Teacher.
+
+Determine whether:
+
+* database role
+* auth middleware
+* JWT
+* session
+* frontend
+
+is responsible.
+
+Fix at root.
+
+---
+
+## 4. Authentication
+
+Student login requires verification.
+
+Investigate:
+
+* firstLogin flow
+* password reset flow
+* seeded credentials
+* rate limiting
+
+Do not manually overwrite passwords just for testing.
+
+Find root cause.
+
+---
+
+# HIGHEST PRIORITY
+
+Complete runtime verification.
+
+Do NOT build unnecessary features.
+
+Verify:
+
+Upload Marks
+
+↓
+
+Database
+
+↓
+
+Leaderboard
+
+↓
+
+Student Dashboard
+
+↓
+
+Charts
+
+↓
+
+Analytics
+
+↓
+
+Notifications
+
+↓
+
+Chapter Progress
+
+End-to-end.
+
+---
+
+# REMAINING FEATURES
+
+Priority 1
+
+* Fix leaderboard generation
+* Fix archive/restore
+* Fix super_admin role
+* Verify authentication
+* Verify chapter progress workflow
+
+Priority 2
+
+* Weekly → Monthly → Quarterly automation
+* Notifications
+* Parent WhatsApp workflow
+
+Priority 3
+
+* Theme toggle polish
+* Landing page mobile polish
+
+Only work on Priority 3 after all production workflows are verified.
+
+---
+
+# TEST REQUIREMENTS
+
+Every bug fix must be verified using actual runtime tests.
+
+Do not assume code is correct.
+
+Return:
+
+* Bug
+* Root Cause
+* Files Modified
+* Runtime Verification
+* Remaining Risks
+
+---
+
+# BEFORE FINISHING
+
+Provide:
+
+1. Production readiness score
+2. Remaining production blockers
+3. Git commit message
+4. Git push commands
+5. Deployment checklist
+
+Never regenerate architecture documentation.
+
+Spend your effort on implementation, testing, production verification, deployment, and remaining business logic.
+
+---
+
+## My assessment of the project
+
+### ✅ Completed (~80–85%)
+
+* Database redesign
+* Academic structure
+* Seeding
+* Student management
+* Soft delete
+* Reset scripts
+* Chapter schema
+* Marks upload
+* Deployment
+* Progress calculation
+* Major architecture
+
+### 🟡 Remaining (~15–20%)
+
+These are the real production blockers:
+
+1. **Leaderboard scope logic** (highest priority)
+2. **Archive/Restore endpoint mismatch**
+3. **Super Admin role mapping**
+4. **Student authentication verification**
+5. **Weekly → Monthly → Quarterly automation**
+6. **Parent WhatsApp automation**
+7. **Theme/mobile polish**
+
+---
+
+### My recommendation
+
+When you start with the next Replit Agent:
+
+* **Don't ask it to "understand the project."**
+* **Don't ask it to "analyze the codebase."**
+* **Don't ask it to regenerate plans.**
+
+The code is already there. The next session should be almost entirely **implementation, debugging, testing, deployment, and production readiness**. That will make much better use of the new context window.
+
+**Confidence:** 0.99

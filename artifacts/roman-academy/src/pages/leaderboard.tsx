@@ -32,7 +32,7 @@ export default function LeaderboardPage() {
   useEffect(() => {
     setLoading(true);
     fetch(`${import.meta.env.BASE_URL}api/teacher/leaderboard?scope=${scope}&batch=${encodeURIComponent(batch)}`)
-      .then(r => r.json()).then(data => setStudents(data || [])).catch(() => setStudents([])).finally(() => setLoading(false));
+      .then(r => r.json()).then(data => setStudents(Array.isArray(data) ? data : [])).catch(() => setStudents([])).finally(() => setLoading(false));
   }, [scope, batch]);
 
   return (

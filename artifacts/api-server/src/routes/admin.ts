@@ -23,7 +23,7 @@ function requireRole(allowedRoles: string[]) {
   };
 }
 
-router.get("/admin/students", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/admin/students", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const { stream, classLevel, batch } = req.query;
 
@@ -73,7 +73,7 @@ router.get("/admin/students", requireRole(["teacher", "admin"]), async (req: any
   }
 });
 
-router.get("/admin/students/search", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/admin/students/search", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const q = String(req.query.q || "").trim();
     if (!q) return res.json([]);
@@ -97,7 +97,7 @@ router.get("/admin/students/search", requireRole(["teacher", "admin"]), async (r
   }
 });
 
-router.get("/admin/archived-students", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/admin/archived-students", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const students = await db.select({
       id: studentsTable.id,
@@ -119,7 +119,7 @@ router.get("/admin/archived-students", requireRole(["teacher", "admin"]), async 
   }
 });
 
-router.patch("/admin/students/:id/archive", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.patch("/admin/students/:id/archive", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const { id } = req.params;
     const existing = await db.select({ id: studentsTable.id })
@@ -135,7 +135,7 @@ router.patch("/admin/students/:id/archive", requireRole(["teacher", "admin"]), a
   }
 });
 
-router.patch("/admin/students/:id/restore", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.patch("/admin/students/:id/restore", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const { id } = req.params;
     const existing = await db.select({ id: studentsTable.id })

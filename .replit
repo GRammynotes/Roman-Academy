@@ -1,4 +1,4 @@
-modules = ["nodejs-24", "python-3.11"]
+modules = ["web", "bash", "nodejs-22"]
 
 [deployment]
 router = "application"
@@ -76,3 +76,6 @@ externalPort = 3000
 
 [userenv.shared]
 PORT = "8080"
+
+[nix]
+channel = "stable-25_05"

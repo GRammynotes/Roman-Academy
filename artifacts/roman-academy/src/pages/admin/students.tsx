@@ -115,7 +115,7 @@ export default function AdminStudents() {
 
   return (
     <AppShell active="/admin/students" role="teacher">
-      <PageHeader eyebrow="Admin Portal" title="Student Reports">
+      <PageHeader eyebrow="Teacher Portal" title="Student Reports">
         <Badge tone="gold">{tab === "active" ? filtered.length : archived.length} Students</Badge>
       </PageHeader>
 

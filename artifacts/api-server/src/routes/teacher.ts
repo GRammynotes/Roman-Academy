@@ -82,7 +82,7 @@ function teacherNote(pct: number): string {
 
 // ── Dashboard ─────────────────────────────────────────────────────────────
 
-router.get("/teacher/dashboard", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/teacher/dashboard", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const batchFilter = req.query.batch as string | undefined;
 
@@ -166,7 +166,7 @@ router.get("/teacher/dashboard", requireRole(["teacher", "admin"]), async (req: 
 
 // ── Students ──────────────────────────────────────────────────────────────
 
-router.get("/teacher/students", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/teacher/students", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const batchFilter = req.query.batch as string | undefined;
     const q = req.query.q as string | undefined;
@@ -204,7 +204,7 @@ router.get("/teacher/students", requireRole(["teacher", "admin"]), async (req: a
   }
 });
 
-router.get("/teacher/students/:id/analytics", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/teacher/students/:id/analytics", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const { id } = req.params;
     const student = await db.select({
@@ -279,7 +279,7 @@ router.get("/teacher/students/:id/analytics", requireRole(["teacher", "admin"]),
   }
 });
 
-router.post("/students", requireRole(["teacher", "admin"]), studentMutationLimiter, async (req: any, res) => {
+router.post("/students", requireRole(["teacher"]), studentMutationLimiter, async (req: any, res) => {
   try {
     const body = req.body;
     const fullName = String(body.fullName || "").trim();
@@ -332,7 +332,7 @@ router.post("/students", requireRole(["teacher", "admin"]), studentMutationLimit
   }
 });
 
-router.patch("/students/:id", requireRole(["teacher", "admin"]), studentMutationLimiter, async (req: any, res) => {
+router.patch("/students/:id", requireRole(["teacher"]), studentMutationLimiter, async (req: any, res) => {
   try {
     const { id } = req.params;
     const { fullName, whatsappContact, parentContact, notes, newPassword } = req.body;
@@ -364,7 +364,7 @@ router.patch("/students/:id", requireRole(["teacher", "admin"]), studentMutation
   }
 });
 
-router.delete("/students/:id", requireRole(["teacher", "admin"]), studentMutationLimiter, async (req: any, res) => {
+router.delete("/students/:id", requireRole(["teacher"]), studentMutationLimiter, async (req: any, res) => {
   try {
     const { id } = req.params;
     await db.update(studentsTable).set({ archived: true }).where(eq(studentsTable.id, id));
@@ -377,7 +377,7 @@ router.delete("/students/:id", requireRole(["teacher", "admin"]), studentMutatio
 
 // ── Promote Batch ─────────────────────────────────────────────────────────
 
-router.post("/teacher/promote-batch", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.post("/teacher/promote-batch", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const { batchType } = req.body;
     if (!batchType) return res.status(400).json({ error: "batchType is required" });
@@ -404,12 +404,13 @@ router.post("/teacher/promote-batch", requireRole(["teacher", "admin"]), async (
 
 // ── Leaderboard ───────────────────────────────────────────────────────────
 
-router.get("/teacher/leaderboard", requireRole(["teacher", "student", "admin"]), async (req: any, res) => {
+router.get("/teacher/leaderboard", requireRole(["teacher", "student"]), async (req: any, res) => {
   try {
     const scope = String(req.query.scope || "weekly");
     const batchFilter = req.query.batch as string | undefined;
 
-    const ranks = await db.select({
+    // Get all rows for this scope/batch, then deduplicate keeping the latest per student
+    const rows = await db.select({
       id: studentsTable.id,
       fullName: studentsTable.fullName,
       batchType: studentsTable.batchType,
@@ -417,6 +418,7 @@ router.get("/teacher/leaderboard", requireRole(["teacher", "student", "admin"]),
       average: rankHistoryTable.average,
       lastTest: rankHistoryTable.lastTest,
       rankMovement: rankHistoryTable.rankMovement,
+      createdAt: rankHistoryTable.createdAt,
     }).from(rankHistoryTable)
       .innerJoin(studentsTable, eq(rankHistoryTable.studentId, studentsTable.id))
       .where(
@@ -426,10 +428,21 @@ router.get("/teacher/leaderboard", requireRole(["teacher", "student", "admin"]),
           ...(batchFilter ? [eq(studentsTable.batchType, batchFilter)] : [])
         )
       )
-      .orderBy(rankHistoryTable.rank)
-      .limit(50);
+      .orderBy(desc(rankHistoryTable.createdAt))
+      .limit(500);
 
-    return res.json(ranks);
+    // Deduplicate: keep only the most recent entry per student
+    const seen = new Set<string>();
+    const unique = rows.filter(r => {
+      if (seen.has(r.id)) return false;
+      seen.add(r.id);
+      return true;
+    });
+
+    // Sort by rank ascending
+    unique.sort((a, b) => a.rank - b.rank);
+
+    return res.json(unique.map(({ createdAt: _c, ...r }) => r));
   } catch (err) {
     logger.error({ err }, "Leaderboard error");
     return res.status(500).json({ error: "Internal server error" });
@@ -438,7 +451,7 @@ router.get("/teacher/leaderboard", requireRole(["teacher", "student", "admin"]),
 
 // ── Schedule ──────────────────────────────────────────────────────────────
 
-router.get("/teacher/schedule", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/teacher/schedule", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const batchFilter = req.query.batch as string | undefined;
 
@@ -473,7 +486,7 @@ router.get("/teacher/schedule", requireRole(["teacher", "admin"]), async (req: a
   }
 });
 
-router.post("/teacher/schedule", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.post("/teacher/schedule", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const { batchName, testName, testType, scheduledDate } = req.body;
     if (!batchName || !testName || !testType || !scheduledDate) {
@@ -514,7 +527,7 @@ router.post("/teacher/schedule", requireRole(["teacher", "admin"]), async (req: 
 
 // ── Settings ──────────────────────────────────────────────────────────────
 
-router.get("/teacher/settings", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/teacher/settings", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const settings = await db.select().from(aiSettingsTable).limit(1);
     const s = settings[0] || {
@@ -550,7 +563,7 @@ router.get("/teacher/settings", requireRole(["teacher", "admin"]), async (req: a
   }
 });
 
-router.post("/teacher/settings", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.post("/teacher/settings", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const { primaryProvider, fallbackProvider, whatsappNumber, notificationPreferences } = req.body;
 
@@ -582,7 +595,7 @@ router.post("/teacher/settings", requireRole(["teacher", "admin"]), async (req: 
 
 // ── WhatsApp ──────────────────────────────────────────────────────────────
 
-router.get("/teacher/whatsapp", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/teacher/whatsapp", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const drafts = await db.select({
       id: whatsappDraftsTable.id,
@@ -606,7 +619,7 @@ router.get("/teacher/whatsapp", requireRole(["teacher", "admin"]), async (req: a
   }
 });
 
-router.post("/teacher/whatsapp/send", requireRole(["teacher", "admin"]), whatsappSendLimiter, async (req: any, res) => {
+router.post("/teacher/whatsapp/send", requireRole(["teacher"]), whatsappSendLimiter, async (req: any, res) => {
   try {
     const { id, body: draftBody } = req.body;
     if (!id) return res.status(400).json({ error: "Missing id" });
@@ -640,7 +653,7 @@ router.post("/teacher/whatsapp/send", requireRole(["teacher", "admin"]), whatsap
 
 // ── Syllabus ──────────────────────────────────────────────────────────────
 
-router.get("/teacher/syllabus", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/teacher/syllabus", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const batchFilter = req.query.batch as string | undefined;
     const students = await db.select({
@@ -662,7 +675,7 @@ router.get("/teacher/syllabus", requireRole(["teacher", "admin"]), async (req: a
 
 // ── Upload Marks (REWORKED) ───────────────────────────────────────────────
 
-router.post("/teacher/upload-marks", requireRole(["teacher", "admin"]), uploadMarksLimiter, async (req: any, res) => {
+router.post("/teacher/upload-marks", requireRole(["teacher"]), uploadMarksLimiter, async (req: any, res) => {
   try {
     const { text, testType, totalMarks: totalMarksInput, chapters: chaptersInput, batchType: batchFilter } = req.body;
     if (!text) return res.status(400).json({ error: "No text provided" });
@@ -787,7 +800,7 @@ router.post("/teacher/upload-marks", requireRole(["teacher", "admin"]), uploadMa
         whatsappStatus: "DRAFT",
       });
 
-      // Update rank history
+      // Update rank history for ALL scopes so the leaderboard query finds entries
       const existingRank = await db.select().from(rankHistoryTable)
         .where(and(eq(rankHistoryTable.studentId, result.studentId), eq(rankHistoryTable.scope, "overall")))
         .orderBy(desc(rankHistoryTable.createdAt))
@@ -796,16 +809,18 @@ router.post("/teacher/upload-marks", requireRole(["teacher", "admin"]), uploadMa
       const prevRank = existingRank[0]?.rank ?? null;
       const rankMovement = prevRank !== null ? prevRank - (result.rank ?? 0) : null;
 
-      await db.insert(rankHistoryTable).values({
-        id: crypto.randomUUID(),
-        studentId: result.studentId,
-        testId,
-        scope: "overall",
-        rank: result.rank ?? 0,
-        average: batchAvg,
-        lastTest: result.percentage,
-        rankMovement,
-      });
+      for (const scope of ["overall", "weekly", "monthly", "quarterly"]) {
+        await db.insert(rankHistoryTable).values({
+          id: crypto.randomUUID(),
+          studentId: result.studentId,
+          testId,
+          scope,
+          rank: result.rank ?? 0,
+          average: batchAvg,
+          lastTest: result.percentage,
+          rankMovement,
+        });
+      }
 
       // Mark chapters COMPLETED for this student
       if (chapterList.length > 0) {
@@ -894,7 +909,7 @@ router.post("/teacher/upload-marks", requireRole(["teacher", "admin"]), uploadMa
 
 // ── WhatsApp Send All ─────────────────────────────────────────────────────
 
-router.post("/teacher/whatsapp/send-all", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.post("/teacher/whatsapp/send-all", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const drafts = await db.select({
       id: whatsappDraftsTable.id,
@@ -926,7 +941,7 @@ router.post("/teacher/whatsapp/send-all", requireRole(["teacher", "admin"]), asy
 
 // ── Batches ───────────────────────────────────────────────────────────────
 
-router.get("/teacher/batches", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/teacher/batches", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const batches = await db.select().from(batchesTable).orderBy(batchesTable.name);
     return res.json(batches);
@@ -938,7 +953,7 @@ router.get("/teacher/batches", requireRole(["teacher", "admin"]), async (req: an
 
 // ── Academic Years ─────────────────────────────────────────────────────────
 
-router.get("/teacher/academic-years", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/teacher/academic-years", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const years = await db.select().from(academicYearsTable).orderBy(desc(academicYearsTable.startDate));
     return res.json(years);
@@ -950,7 +965,7 @@ router.get("/teacher/academic-years", requireRole(["teacher", "admin"]), async (
 
 // ── Subjects ───────────────────────────────────────────────────────────────
 
-router.get("/teacher/subjects", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/teacher/subjects", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const batchFilter = req.query.batch as string | undefined;
 
@@ -979,7 +994,7 @@ router.get("/teacher/subjects", requireRole(["teacher", "admin"]), async (req: a
 
 // ── Chapters (with progress) ───────────────────────────────────────────────
 
-router.get("/teacher/chapters", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.get("/teacher/chapters", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const batchFilter = req.query.batch as string | undefined;
     const subjectFilter = req.query.subject as string | undefined;
@@ -1025,7 +1040,7 @@ router.get("/teacher/chapters", requireRole(["teacher", "admin"]), async (req: a
 
 // ── Chapter Progress (start / complete teaching) ───────────────────────────
 
-router.post("/teacher/chapter-progress", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.post("/teacher/chapter-progress", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const { chapterId, batchName, action } = req.body;
     if (!chapterId || !batchName || !action) {
@@ -1097,7 +1112,7 @@ router.post("/teacher/chapter-progress", requireRole(["teacher", "admin"]), asyn
 
 // ── Leaderboard Cache (regenerate) ────────────────────────────────────────
 
-router.post("/teacher/leaderboard/regenerate", requireRole(["teacher", "admin"]), async (req: any, res) => {
+router.post("/teacher/leaderboard/regenerate", requireRole(["teacher"]), async (req: any, res) => {
   try {
     const { batchName } = req.body;
     const batch = batchName
