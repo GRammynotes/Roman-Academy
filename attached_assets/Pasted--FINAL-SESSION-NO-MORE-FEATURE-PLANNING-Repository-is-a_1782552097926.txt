@@ -1,0 +1,202 @@
+# FINAL SESSION — NO MORE FEATURE PLANNING
+
+Repository is already connected.
+
+Do NOT analyze architecture again.
+
+Do NOT inspect unnecessary files.
+
+Continue from the current codebase and complete ONLY the remaining production blockers.
+
+## 1. UI FIXES (Highest Priority)
+
+Fix all responsive issues before production.
+
+From attached screenshots:
+
+* Notification dropdown/popup must NEVER go outside the viewport on desktop, tablet or mobile.
+* Keep every popup, modal, dropdown and sidebar completely visible on every screen size.
+* Audit every page for overflow, clipping, hidden content or horizontal scrolling and fix them.
+* The leaderboard table should never be hidden behind floating widgets or browser edges.
+
+## 2. SINGLE THEME ONLY
+
+Remove the theme system completely.
+
+Roman Academy should permanently use the existing Navy + Gold + Ivory dark theme.
+
+Remove:
+
+* Theme toggle button
+* Theme icon
+* Theme provider logic
+* Theme switching code
+* LocalStorage theme handling
+
+Keep only one premium theme throughout the website.
+
+## 3. FINAL PRODUCTION RESET
+
+Prepare the database exactly for first-day production.
+
+Keep:
+
+* Teachers
+* Students (20)
+* Batches
+* Subjects
+* Chapters
+* Schedule
+* Academic Years
+
+Remove:
+
+* Demo marks
+* Demo rankings
+* Demo attendance
+* Demo notifications
+* Demo WhatsApp drafts
+* Demo analytics
+* Test uploads created during development
+
+All students should start fresh.
+
+No fake academic data should remain.
+
+## 4. COMPLETE RUNTIME AUDIT
+
+Before changing anything else:
+
+Login as Teacher.
+
+Login as Student.
+
+Use the real application.
+
+Verify:
+
+✓ Teacher Dashboard
+
+✓ Student Dashboard
+
+✓ Upload Marks
+
+✓ Chapter Progress
+
+✓ Schedule
+
+✓ Search & Reports
+
+✓ Leaderboard
+
+✓ Notifications
+
+✓ WhatsApp Queue
+
+✓ Archive / Restore
+
+✓ Student Progress
+
+Run one complete workflow:
+
+Teacher starts chapter
+
+↓
+
+Teacher completes chapter
+
+↓
+
+Upload Weekly Test
+
+↓
+
+Leaderboard updates
+
+↓
+
+Student dashboard updates
+
+↓
+
+Graphs update
+
+↓
+
+Notifications generated
+
+↓
+
+WhatsApp drafts generated
+
+If any step fails:
+
+Fix only that workflow.
+
+Retest.
+
+## 5. FINAL PRODUCTION PACKAGE
+
+Before stopping create these files:
+
+PRODUCTION_DEPLOYMENT.md
+
+Include:
+
+* Git push commands
+* Render deployment
+* Vercel deployment
+* Neon verification
+* Environment variables
+* Production checklist
+* Rollback steps
+
+PRODUCTION_RESET.md
+
+Include:
+
+* Reset commands
+* Seed commands
+* Backup commands
+* Restore commands
+
+FINAL_TEST_REPORT.md
+
+Include:
+
+✓ Features Tested
+
+✓ Passed
+
+✓ Failed
+
+✓ Bugs Fixed
+
+✓ Remaining Known Issues
+
+✓ Production Readiness %
+
+## IMPORTANT
+
+Do NOT create new features.
+
+Do NOT redesign UI.
+
+Do NOT refactor working code.
+
+Spend every remaining token on:
+
+1. Production verification
+2. Runtime testing
+3. Fixing production blockers
+4. Deployment documentation
+
+When finished, stop coding and return only:
+
+* Files Modified
+* Bugs Fixed
+* Runtime Test Results
+* Git Commit Message
+* Git Commands
+* Production Deployment Steps
+* Remaining Production Risks

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Bell, X, CheckCheck, BookOpen, FlaskConical, Trophy } from "lucide-react";
+import { Bell, X, CheckCheck, BookOpen, Trophy } from "lucide-react";
 
 export type Notification = {
   id: string;
@@ -61,8 +61,8 @@ function NotificationToast({
   }, [onDismiss]);
 
   return (
-    <div className="fixed bottom-24 lg:bottom-6 right-4 z-[200] w-80 animate-in slide-in-from-right-full duration-300">
-      <div className="rounded-xl border border-gold-500/30 bg-navy-900/95 backdrop-blur-md shadow-2xl overflow-hidden">
+    <div className="fixed bottom-24 lg:bottom-6 right-4 left-4 sm:left-auto sm:w-80 z-[200]">
+      <div className="rounded-xl border border-gold-500/30 bg-navy-900/98 shadow-2xl overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-2 border-b border-gold-500/15 bg-gold-400/5">
           <Bell className="size-3.5 text-gold-400" />
           <span className="text-xs font-semibold text-gold-300 uppercase tracking-wider">New Notification</span>
@@ -96,13 +96,17 @@ function NotificationToast({
   );
 }
 
-export function NotificationBell({ studentId }: { studentId?: string }) {
+export function NotificationBell({
+  openDirection = "down",
+}: {
+  openDirection?: "up" | "down";
+}) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState<Notification | null>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const shownIds = useRef<Set<string>>(new Set());
-  const base = import.meta.env.BASE_URL;
+  const base = import.meta.env.BASE_URL ?? "/";
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -127,7 +131,7 @@ export function NotificationBell({ studentId }: { studentId?: string }) {
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
@@ -153,6 +157,11 @@ export function NotificationBell({ studentId }: { studentId?: string }) {
 
   const count = notifications.length;
 
+  // Panel positioning: up = opens above the button, down = opens below
+  const panelPositionClass = openDirection === "up"
+    ? "bottom-full mb-2 right-0"
+    : "top-full mt-2 right-0";
+
   return (
     <>
       {toast && (
@@ -163,7 +172,7 @@ export function NotificationBell({ studentId }: { studentId?: string }) {
         />
       )}
 
-      <div className="relative" ref={panelRef}>
+      <div className="relative" ref={wrapperRef}>
         <button
           onClick={() => setOpen(o => !o)}
           className="relative p-2 rounded-lg border border-gold-400/20 bg-navy-950/50 hover:bg-white/10 text-gold-300 transition-all"
@@ -171,14 +180,14 @@ export function NotificationBell({ studentId }: { studentId?: string }) {
         >
           <Bell className="size-4" />
           {count > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-gold-400 text-navy-950 text-[10px] font-bold flex items-center justify-center px-1">
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-gold-400 text-navy-950 text-[10px] font-bold flex items-center justify-center px-1 pointer-events-none">
               {count > 9 ? "9+" : count}
             </span>
           )}
         </button>
 
         {open && (
-          <div className="absolute right-0 top-full mt-2 w-80 z-[100] rounded-xl border border-gold-500/20 bg-navy-900/98 backdrop-blur-md shadow-2xl overflow-hidden">
+          <div className={`absolute ${panelPositionClass} w-[min(320px,calc(100vw-2rem))] z-[100] rounded-xl border border-gold-500/20 bg-navy-900/98 shadow-2xl overflow-hidden`}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-gold-500/15">
               <div className="flex items-center gap-2">
                 <Bell className="size-4 text-gold-400" />
@@ -194,7 +203,7 @@ export function NotificationBell({ studentId }: { studentId?: string }) {
               )}
             </div>
 
-            <div className="max-h-80 overflow-y-auto">
+            <div className="max-h-72 overflow-y-auto overscroll-contain">
               {count === 0 ? (
                 <div className="py-10 text-center">
                   <Bell className="size-8 mx-auto mb-2 text-gold-400/20" />

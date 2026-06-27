@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   CalendarDays,
@@ -14,11 +14,8 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { RomanWordmark } from "@/components/roman-wordmark";
 import { cn } from "@/lib/utils";
-import { Lightfall } from "@/components/ui/lightfall";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 
 type ShellRole = "teacher" | "student";
@@ -90,15 +87,6 @@ export function AppShell({
 }) {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [effectsEnabled, setEffectsEnabled] = useState(true);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("ra_effects_enabled");
-    if (saved !== null) setEffectsEnabled(saved === "true");
-    const handleToggle = (e: any) => setEffectsEnabled(e.detail);
-    window.addEventListener("theme-effect-toggle", handleToggle);
-    return () => window.removeEventListener("theme-effect-toggle", handleToggle);
-  }, []);
 
   const currentPath = active || location;
 
@@ -106,18 +94,10 @@ export function AppShell({
   const mobileNavItems = role === "teacher" ? teacherMobileItems : studentMobileItems;
 
   return (
-    <div className="dark relative flex h-screen flex-col lg:flex-row bg-navy-950">
-      {effectsEnabled && (
-        <Lightfall
-          colors={["#D4AF37", "#F7E7A1", "#0A2342"]}
-          backgroundColor="transparent"
-          speed={0.5}
-          streakCount={20}
-        />
-      )}
+    <div className="dark relative flex h-screen flex-col lg:flex-row bg-navy-950 overflow-hidden">
 
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex flex-col border-r border-gold-400/15 bg-navy-950/90 backdrop-blur-md w-56 z-10 shrink-0">
+      <div className="hidden lg:flex flex-col border-r border-gold-400/15 bg-navy-950/95 w-56 z-30 shrink-0">
         <div className="border-b border-gold-400/15 p-4">
           <RomanWordmark compact={false} />
         </div>
@@ -145,22 +125,21 @@ export function AppShell({
         <div className="border-t border-gold-400/15 p-4 flex flex-col gap-3">
           {role === "student" && (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-ivory-100/50">Notifications</span>
-              <NotificationBell />
+              <span className="text-xs text-ivory-100/50 flex-1">Notifications</span>
+              <NotificationBell openDirection="up" />
             </div>
           )}
-          <ThemeToggle />
           <p className="text-xs text-ivory-100/40">Roman Academy © 2026</p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-hidden z-10">
+      <div className="flex flex-1 flex-col min-w-0 overflow-hidden z-10">
         {/* Top Bar (Mobile) */}
-        <div className="flex items-center justify-between border-b border-gold-400/15 bg-navy-950/90 backdrop-blur-md px-4 py-3 lg:hidden">
+        <div className="flex items-center justify-between border-b border-gold-400/15 bg-navy-950/95 px-4 py-3 lg:hidden shrink-0">
           <RomanWordmark compact={true} />
           <div className="flex items-center gap-2">
-            {role === "student" && <NotificationBell />}
+            {role === "student" && <NotificationBell openDirection="down" />}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="rounded-lg p-2 hover:bg-white/10 text-white"
@@ -177,7 +156,7 @@ export function AppShell({
               className="flex-1 bg-black/20 backdrop-blur-sm"
               onClick={() => setMobileMenuOpen(false)}
             />
-            <div className="w-56 border-l border-gold-400/15 bg-navy-950/95 backdrop-blur-md overflow-y-auto">
+            <div className="w-56 border-l border-gold-400/15 bg-navy-950/95 overflow-y-auto">
               <nav className="space-y-1 p-4">
                 {desktopNavItems.map((item) => {
                   const Icon = item.icon;
@@ -200,19 +179,18 @@ export function AppShell({
                   );
                 })}
               </nav>
-              <div className="border-t border-gold-400/15 p-4">
-                <ThemeToggle />
-              </div>
             </div>
           </div>
         )}
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto pb-20 lg:pb-0">{children}</main>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden pb-20 lg:pb-0 min-w-0">
+          {children}
+        </main>
       </div>
 
       {/* Bottom Navigation (Mobile) */}
-      <div className="fixed bottom-0 left-0 right-0 flex lg:hidden border-t border-gold-400/15 bg-navy-950/90 backdrop-blur-md z-20">
+      <div className="fixed bottom-0 left-0 right-0 flex lg:hidden border-t border-gold-400/15 bg-navy-950/95 z-20">
         {mobileNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPath === item.href || currentPath.startsWith(item.href + "/");
