@@ -8,8 +8,9 @@ import {
   testChaptersTable,
   studentChaptersTable,
   rankHistoryTable,
+  notificationsTable,
 } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { logger } from "../lib/logger";
 
 const router = Router();
@@ -196,6 +197,50 @@ router.get("/student/progress", requireStudent, async (req: any, res) => {
     });
   } catch (err) {
     logger.error({ err }, "Student progress error");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── Notifications ──────────────────────────────────────────────────────────
+router.get("/student/notifications", requireStudent, async (req: any, res) => {
+  try {
+    const student = await db.select({ id: studentsTable.id })
+      .from(studentsTable).where(eq(studentsTable.userId, req.userId)).limit(1);
+    if (!student[0]) return res.json([]);
+    const rows = await db.select().from(notificationsTable)
+      .where(and(eq(notificationsTable.studentId, student[0].id), eq(notificationsTable.isRead, false)))
+      .orderBy(desc(notificationsTable.createdAt))
+      .limit(20);
+    return res.json(rows);
+  } catch (err) {
+    logger.error({ err }, "Get notifications error");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.patch("/student/notifications/:id/read", requireStudent, async (req: any, res) => {
+  try {
+    await db.update(notificationsTable)
+      .set({ isRead: true })
+      .where(eq(notificationsTable.id, req.params.id));
+    return res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err }, "Mark notification read error");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.patch("/student/notifications/read-all", requireStudent, async (req: any, res) => {
+  try {
+    const student = await db.select({ id: studentsTable.id })
+      .from(studentsTable).where(eq(studentsTable.userId, req.userId)).limit(1);
+    if (!student[0]) return res.json({ ok: true });
+    await db.update(notificationsTable)
+      .set({ isRead: true })
+      .where(and(eq(notificationsTable.studentId, student[0].id), eq(notificationsTable.isRead, false)));
+    return res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err }, "Mark all notifications read error");
     return res.status(500).json({ error: "Internal server error" });
   }
 });

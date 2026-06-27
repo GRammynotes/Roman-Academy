@@ -19,6 +19,7 @@ import { RomanWordmark } from "@/components/roman-wordmark";
 import { cn } from "@/lib/utils";
 import { Lightfall } from "@/components/ui/lightfall";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { NotificationBell } from "@/components/notification-bell";
 
 type ShellRole = "teacher" | "student";
 
@@ -105,7 +106,7 @@ export function AppShell({
   const mobileNavItems = role === "teacher" ? teacherMobileItems : studentMobileItems;
 
   return (
-    <div className="relative flex h-screen flex-col lg:flex-row bg-navy-950">
+    <div className="dark relative flex h-screen flex-col lg:flex-row bg-navy-950">
       {effectsEnabled && (
         <Lightfall
           colors={["#D4AF37", "#F7E7A1", "#0A2342"]}
@@ -142,6 +143,12 @@ export function AppShell({
           })}
         </nav>
         <div className="border-t border-gold-400/15 p-4 flex flex-col gap-3">
+          {role === "student" && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-ivory-100/50">Notifications</span>
+              <NotificationBell />
+            </div>
+          )}
           <ThemeToggle />
           <p className="text-xs text-ivory-100/40">Roman Academy © 2026</p>
         </div>
@@ -152,12 +159,15 @@ export function AppShell({
         {/* Top Bar (Mobile) */}
         <div className="flex items-center justify-between border-b border-gold-400/15 bg-navy-950/90 backdrop-blur-md px-4 py-3 lg:hidden">
           <RomanWordmark compact={true} />
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="rounded-lg p-2 hover:bg-white/10 text-white"
-          >
-            {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
+          <div className="flex items-center gap-2">
+            {role === "student" && <NotificationBell />}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="rounded-lg p-2 hover:bg-white/10 text-white"
+            >
+              {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu Drawer */}

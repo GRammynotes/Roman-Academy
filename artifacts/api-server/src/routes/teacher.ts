@@ -17,6 +17,7 @@ import {
   subjectsTable,
   chapterProgressTable,
   leaderboardCacheTable,
+  notificationsTable,
 } from "@workspace/db";
 import { eq, and, desc, sql, ilike, asc } from "drizzle-orm";
 import * as bcryptjs from "bcryptjs";
@@ -1096,23 +1097,41 @@ router.post("/teacher/chapter-progress", requireRole(["teacher"]), async (req: a
       });
     }
 
-    // If completing, also update all students in this batch
-    if (action === "complete") {
+    // If completing or starting, notify all students in this batch
+    if (action === "complete" || action === "start") {
       const chapter = await db.select().from(chaptersTable).where(eq(chaptersTable.id, chapterId)).limit(1);
       if (chapter[0]) {
         const batchStudents = await db.select({ id: studentsTable.id })
           .from(studentsTable)
           .where(and(eq(studentsTable.batchId, batch[0].id), eq(studentsTable.archived, false)));
 
+        const notifTitle = action === "complete"
+          ? `Chapter Completed: ${chapter[0].name}`
+          : `Chapter Started: ${chapter[0].name}`;
+        const notifBody = action === "complete"
+          ? `Your class has completed "${chapter[0].name}" (${chapter[0].subject}). Review it for your next test!`
+          : `Your teacher has started "${chapter[0].name}" (${chapter[0].subject}). Follow along!`;
+        const notifType = action === "complete" ? "chapter_complete" : "chapter_start";
+
         for (const student of batchStudents) {
-          const sc = await db.select().from(studentChaptersTable)
-            .where(and(eq(studentChaptersTable.studentId, student.id), eq(studentChaptersTable.chapterId, chapterId)))
-            .limit(1);
-          if (sc[0]) {
-            await db.update(studentChaptersTable)
-              .set({ status: "COMPLETED", updatedAt: now })
-              .where(eq(studentChaptersTable.id, sc[0].id));
+          if (action === "complete") {
+            const sc = await db.select().from(studentChaptersTable)
+              .where(and(eq(studentChaptersTable.studentId, student.id), eq(studentChaptersTable.chapterId, chapterId)))
+              .limit(1);
+            if (sc[0]) {
+              await db.update(studentChaptersTable)
+                .set({ status: "COMPLETED", updatedAt: now })
+                .where(eq(studentChaptersTable.id, sc[0].id));
+            }
           }
+          // Create notification
+          await db.insert(notificationsTable).values({
+            id: crypto.randomUUID(),
+            studentId: student.id,
+            title: notifTitle,
+            body: notifBody,
+            type: notifType,
+          }).onConflictDoNothing();
         }
       }
     }

@@ -233,6 +233,19 @@ export const aiSettingsTable = pgTable("ai_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// ── Notifications ──────────────────────────────────────────────────────────────
+export const notificationsTable = pgTable("notifications", {
+  id: text("id").primaryKey().notNull(),
+  studentId: text("student_id").notNull().references(() => studentsTable.id),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  type: text("type").notNull(),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [
+  index("idx_notifications_student_read").on(t.studentId, t.isRead),
+]);
+
 // ── Zod Schemas ───────────────────────────────────────────────────────────────
 export const insertStudentSchema = createInsertSchema(studentsTable);
 export const insertTestResultSchema = createInsertSchema(studentTestResultsTable);
