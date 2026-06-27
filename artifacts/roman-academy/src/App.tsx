@@ -16,7 +16,6 @@ const UploadMarksPage  = lazy(() => import("@/pages/teacher/upload-marks"));
 const WhatsAppPage     = lazy(() => import("@/pages/teacher/whatsapp"));
 const SchedulePage     = lazy(() => import("@/pages/teacher/schedule"));
 const SettingsPage     = lazy(() => import("@/pages/teacher/settings"));
-const ChaptersPage     = lazy(() => import("@/pages/teacher/chapters"));
 
 const StudentDashboard = lazy(() => import("@/pages/student/dashboard"));
 const StudentTests     = lazy(() => import("@/pages/student/tests"));
@@ -25,9 +24,7 @@ const StudentProfile   = lazy(() => import("@/pages/student/profile"));
 const StudentSettings  = lazy(() => import("@/pages/student/settings"));
 const StudentSupport   = lazy(() => import("@/pages/student/support"));
 
-const AdminStudents    = lazy(() => import("@/pages/admin/students"));
-const TeacherAccess    = lazy(() => import("@/pages/teacher-access"));
-const ChangePassword   = lazy(() => import("@/pages/change-password"));
+const AdminStudents = lazy(() => import("@/pages/admin/students"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,7 +48,6 @@ function Router() {
         <Route path="/teacher/students" component={TeacherStudents} />
         <Route path="/teacher/upload-marks" component={UploadMarksPage} />
         <Route path="/teacher/whatsapp" component={WhatsAppPage} />
-        <Route path="/teacher/chapters" component={ChaptersPage} />
         <Route path="/teacher/schedule" component={SchedulePage} />
         <Route path="/teacher/settings" component={SettingsPage} />
 
@@ -62,9 +58,7 @@ function Router() {
         <Route path="/student/settings" component={StudentSettings} />
         <Route path="/student/support" component={StudentSupport} />
 
-        <Route path="/change-password" component={ChangePassword} />
         <Route path="/admin/students" component={AdminStudents} />
-        <Route path="/teacher-access" component={TeacherAccess} />
 
         <Route component={NotFound} />
       </Switch>

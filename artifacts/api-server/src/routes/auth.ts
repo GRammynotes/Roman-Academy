@@ -79,7 +79,6 @@ router.post("/auth/login", async (req: any, res) => {
       role,
       userId: user.id,
       username: user.username,
-      firstLogin: user.firstLogin ?? false,
       ...(studentId && { studentId }),
     });
   } catch (err) {
@@ -107,32 +106,6 @@ router.get("/auth/me", (req: any, res) => {
     role: req.session.role,
     username: req.session.username,
   });
-});
-
-router.get("/auth/teacher-access", async (req: any, res) => {
-  try {
-    const expected = process.env.TEACHER_MAGIC_TOKEN;
-    if (!expected) {
-      logger.warn("TEACHER_MAGIC_TOKEN env var is not set — teacher-access route is disabled");
-      return res.status(503).json({ error: "Teacher access link is not configured. Contact the administrator." });
-    }
-    const { token } = req.query;
-    if (!token || token !== expected) {
-      return res.status(403).json({ error: "Invalid or missing access token" });
-    }
-    const users = await db.select().from(usersTable)
-      .where(eq(usersTable.username, "roman_sir")).limit(1);
-    const user = users[0];
-    if (!user) return res.status(404).json({ error: "Teacher account not found" });
-
-    req.session.userId = user.id;
-    req.session.role = "teacher";
-    req.session.username = user.username;
-    return res.json({ success: true, role: "teacher" });
-  } catch (err) {
-    logger.error({ err }, "Teacher access error");
-    return res.status(500).json({ error: "Internal server error" });
-  }
 });
 
 router.post("/auth/change-password", async (req: any, res) => {

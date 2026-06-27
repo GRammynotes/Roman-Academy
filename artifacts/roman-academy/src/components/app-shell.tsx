@@ -26,7 +26,6 @@ const teacherNavItems = [
   { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
   { href: "/teacher/upload-marks", label: "Upload Marks", icon: Upload },
   { href: "/teacher/students", label: "Manage Students", icon: Users },
-  { href: "/teacher/chapters", label: "Chapter Progress", icon: LineChart },
   { href: "/teacher/whatsapp", label: "WhatsApp Queue", icon: MessageSquareText },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/teacher/settings", label: "Settings", icon: Settings },

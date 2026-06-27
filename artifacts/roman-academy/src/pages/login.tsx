@@ -1,9 +1,8 @@
-import { lazy, Suspense, useState } from "react";
+import { useState } from "react";
 import { useLocation, Link } from "wouter";
-import { ArrowRight, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowRight, AlertCircle, Loader2, LogIn } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { RomanWordmark } from "@/components/roman-wordmark";
-
-const Ferrofluid = lazy(() => import("@/components/react-bits/Ferrofluid"));
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
@@ -12,64 +11,40 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent, demoUser?: string, demoPass?: string) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    const loginUsername = demoUser || username;
+    const loginPassword = demoPass || password;
+
     try {
       const response = await fetch(`${import.meta.env.BASE_URL}api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username.trim(), password }),
+        body: JSON.stringify({ username: loginUsername, password: loginPassword }),
       });
+
       const data = await response.json();
       if (!response.ok) {
         setError(data.error || "Invalid credentials");
         setLoading(false);
         return;
       }
+
       localStorage.setItem("ra_role", data.role);
-      if (data.firstLogin) {
-        setLocation(`/change-password`);
-        return;
-      }
-      setLocation(data.role === "teacher" ? "/teacher" : "/student");
-    } catch {
+      const redirectUrl = data.role === "teacher" ? "/teacher" : "/student";
+      setLocation(redirectUrl);
+    } catch (err) {
       setError("Connection error. Please try again.");
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-navy-950 relative flex flex-col items-center justify-center overflow-hidden">
-      {/* Ferrofluid background */}
-      <div className="absolute inset-0 z-0 opacity-30">
-        <Suspense fallback={null}>
-          <Ferrofluid
-            colors={["#D4AF37","#B8962E","#071A3D","#0A1628","#D4AF37"]}
-            speed={0.3}
-            scale={1.8}
-            turbulence={0.8}
-            fluidity={0.12}
-            rimWidth={0.18}
-            sharpness={2.5}
-            shimmer={1.2}
-            glow={1.8}
-            flowDirection="down"
-            opacity={1}
-            mouseInteraction={true}
-            mouseStrength={0.6}
-            mouseRadius={0.3}
-          />
-        </Suspense>
-      </div>
-
-      {/* Overlay gradient */}
-      <div className="absolute inset-0 z-0"
-        style={{ background: "radial-gradient(ellipse at center, rgba(5,11,26,0.6) 0%, rgba(5,11,26,0.9) 80%)" }} />
-
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-sm px-4">
+    <main className="min-h-screen bg-navy-950 p-4 flex flex-col items-center justify-center">
+      <div className="w-full max-w-5xl">
         <div className="mb-8 text-center">
           <RomanWordmark className="mx-auto justify-center mb-4" />
           <p className="text-sm font-semibold uppercase tracking-[0.15em] text-ivory-100/60">
@@ -77,66 +52,103 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-gold-400/25 bg-navy-950/80 backdrop-blur-xl shadow-2xl shadow-navy-950/80 overflow-hidden">
-          {/* Gold top bar */}
-          <div className="h-1 w-full bg-gradient-to-r from-gold-600 via-gold-300 to-gold-600" />
-
-          <div className="p-7 space-y-5">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
-              <p className="text-sm text-ivory-100/55 mt-1">Sign in to your Roman Academy account</p>
-            </div>
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-ivory-100/70 mb-1.5 uppercase tracking-wider">Username</label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="your.name.2026"
-                  className="w-full px-4 py-2.5 rounded-lg border border-gold-500/25 bg-navy-900/80 text-white placeholder-ivory-100/25 focus:ring-2 focus:ring-gold-400/50 focus:border-gold-400/50 focus:outline-none transition-all text-sm"
-                  required disabled={loading} autoComplete="username"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-ivory-100/70 mb-1.5 uppercase tracking-wider">Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full px-4 py-2.5 rounded-lg border border-gold-500/25 bg-navy-900/80 text-white placeholder-ivory-100/25 focus:ring-2 focus:ring-gold-400/50 focus:border-gold-400/50 focus:outline-none transition-all text-sm"
-                  required disabled={loading} autoComplete="current-password"
-                />
-              </div>
-
-              {error && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-red-900/30 border border-red-700/40 text-red-400 text-sm">
-                  <AlertCircle className="size-4 shrink-0" />{error}
-                </div>
-              )}
-
-              <button
-                type="submit" disabled={loading}
-                className="w-full py-3 bg-gold-400 text-navy-950 font-bold rounded-lg hover:bg-gold-300 disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_4px_20px_rgba(212,175,55,0.3)] text-sm"
-              >
-                {loading ? <Loader2 className="size-4 animate-spin" /> : <>Sign In <ArrowRight className="size-4" /></>}
-              </button>
-            </form>
-
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-xs text-ivory-100/35">
-                Contact your teacher if you don't have an account.
-              </p>
-            </div>
-
-            <div className="text-center pt-1">
-              <Link href="/" className="text-xs text-gold-400/70 hover:text-gold-300 transition-colors">
-                ← Back to Roman Academy
-              </Link>
+        <div className="grid lg:grid-cols-[1.5fr_1fr] gap-6 items-start">
+          <div className="relative rounded-xl border-2 border-gold-500/30 shadow-lg overflow-hidden bg-navy-900 aspect-[4/3]">
+            <img
+              src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&q=80&w=800"
+              alt="Roman Academy"
+              className="w-full h-full object-cover opacity-70"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/50 to-transparent flex flex-col justify-end p-6">
+              <p className="text-gold-300 italic font-serif text-lg mb-1">शिक्षा ही शक्ति है</p>
+              <p className="text-white text-sm font-semibold">Education is Power</p>
+              <p className="text-ivory-100/60 text-xs mt-2">11th & 12th Science • Board + CET Prep • Navi Mumbai</p>
             </div>
           </div>
+
+          <Card className="shadow-xl">
+            <CardContent className="p-6 space-y-5">
+              <div>
+                <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
+                <p className="text-sm text-ivory-100/60 mt-1">Login to your Roman Academy account</p>
+              </div>
+
+              <form onSubmit={(e) => handleLogin(e)} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-ivory-100/80 mb-1">Username</label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="your.name.2026"
+                    className="w-full px-3 py-2 rounded-lg border border-gold-500/25 bg-navy-900 text-white placeholder-ivory-100/30 focus:ring-2 focus:ring-gold-400 focus:outline-none"
+                    required
+                    disabled={loading}
+                    autoComplete="username"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-ivory-100/80 mb-1">Password</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password"
+                    className="w-full px-3 py-2 rounded-lg border border-gold-500/25 bg-navy-900 text-white placeholder-ivory-100/30 focus:ring-2 focus:ring-gold-400 focus:outline-none"
+                    required
+                    disabled={loading}
+                    autoComplete="current-password"
+                  />
+                </div>
+
+                {error && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-red-900/30 border border-red-700/40 text-red-400 text-sm">
+                    <AlertCircle className="size-4 shrink-0" />
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-2.5 bg-gold-400 text-navy-950 font-bold rounded-lg hover:bg-gold-300 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+                >
+                  {loading ? <Loader2 className="size-4 animate-spin" /> : <>Login <ArrowRight className="size-4" /></>}
+                </button>
+              </form>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={(e) => handleLogin(e as any, "roman_sir", "Roman@123")}
+                  disabled={loading}
+                  className="py-2 border border-gold-500/40 text-gold-300 font-semibold rounded-lg hover:bg-gold-400/10 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors text-sm"
+                >
+                  <LogIn className="size-4" /> Demo: Teacher
+                </button>
+                <button
+                  onClick={(e) => handleLogin(e as any, "kunal.datkhile.2026", "student@123")}
+                  disabled={loading}
+                  className="py-2 border border-purple-500/40 text-purple-300 font-semibold rounded-lg hover:bg-purple-400/10 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors text-sm"
+                >
+                  <LogIn className="size-4" /> Demo: Student
+                </button>
+              </div>
+
+              <div className="text-xs text-ivory-100/40 bg-navy-900 p-3 rounded-lg space-y-1">
+                <p className="font-semibold text-ivory-100/60">Demo accounts:</p>
+                <p>Teacher: roman_sir / Roman@123</p>
+                <p>Student: kunal.datkhile.2026 / student@123</p>
+                <p className="text-ivory-100/30">All students: firstname.lastname.2026 / student@123</p>
+              </div>
+
+              <div className="text-center">
+                <Link href="/" className="text-xs text-gold-400 hover:text-gold-300 transition-colors">
+                  ← Back to Roman Academy
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </main>

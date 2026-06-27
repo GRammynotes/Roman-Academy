@@ -13,10 +13,6 @@ import {
   aiSettingsTable,
   testChaptersTable,
   chaptersTable,
-  academicYearsTable,
-  subjectsTable,
-  chapterProgressTable,
-  leaderboardCacheTable,
 } from "@workspace/db";
 import { eq, and, desc, sql, ilike, asc } from "drizzle-orm";
 import * as bcryptjs from "bcryptjs";
@@ -173,12 +169,7 @@ router.get("/teacher/students", requireRole(["teacher", "admin"]), async (req: a
 
     const filters: any[] = [eq(studentsTable.archived, false)];
     if (batchFilter) filters.push(eq(studentsTable.batchType, batchFilter));
-    if (q?.trim()) {
-      const term = `%${q.trim()}%`;
-      filters.push(
-        sql`(${ilike(studentsTable.fullName, term)} OR ${ilike(studentsTable.whatsappContact, term)} OR ${ilike(usersTable.username, term)})`
-      );
-    }
+    if (q?.trim()) filters.push(ilike(studentsTable.fullName, `%${q.trim()}%`));
 
     const students = await db.select({
       id: studentsTable.id,
@@ -335,7 +326,7 @@ router.post("/students", requireRole(["teacher", "admin"]), studentMutationLimit
 router.patch("/students/:id", requireRole(["teacher", "admin"]), studentMutationLimiter, async (req: any, res) => {
   try {
     const { id } = req.params;
-    const { fullName, whatsappContact, parentContact, notes, newPassword } = req.body;
+    const { fullName, whatsappContact, parentContact, notes } = req.body;
 
     await db.update(studentsTable)
       .set({
@@ -345,17 +336,6 @@ router.patch("/students/:id", requireRole(["teacher", "admin"]), studentMutation
         ...(notes !== undefined ? { notes } : {}),
       })
       .where(eq(studentsTable.id, id));
-
-    if (newPassword && String(newPassword).length >= 6) {
-      const newHash = await bcryptjs.hash(String(newPassword), 10);
-      const student = await db.select({ userId: studentsTable.userId })
-        .from(studentsTable).where(eq(studentsTable.id, id)).limit(1);
-      if (student[0]?.userId) {
-        await db.update(usersTable)
-          .set({ passwordHash: newHash, firstLogin: true, updatedAt: new Date() })
-          .where(eq(usersTable.id, student[0].userId));
-      }
-    }
 
     return res.json({ success: true });
   } catch (err) {
@@ -692,20 +672,15 @@ router.post("/teacher/upload-marks", requireRole(["teacher", "admin"]), uploadMa
       QUARTERLY: "Quarterly Test",
       FULL_LENGTH_MOCK: "Full Length Mock",
       REVISION_TEST: "Revision Test",
-      CET_MOCK: "CET Mock Test",
     };
     const testName = `${typeLabel[testType] || testType} — ${dateStr}`;
 
-    // Detect classLevel and batchId from batch
+    // Detect classLevel from batch
     let classLevel: "ELEVEN" | "TWELVE" = "TWELVE";
     let stream: "SCIENCE_PCM" = "SCIENCE_PCM";
-    let resolvedBatchId: string | null = null;
     if (batchFilter) {
       const batch = await db.select().from(batchesTable).where(eq(batchesTable.name, batchFilter)).limit(1);
-      if (batch[0]) {
-        classLevel = batch[0].classLevel;
-        resolvedBatchId = batch[0].id;
-      }
+      if (batch[0]) classLevel = batch[0].classLevel;
     }
 
     const testId = crypto.randomUUID();
@@ -717,7 +692,6 @@ router.post("/teacher/upload-marks", requireRole(["teacher", "admin"]), uploadMa
       stream,
       date: now,
       totalMarks,
-      ...(resolvedBatchId ? { batchId: resolvedBatchId } : {}),
     });
 
     // Link chapters to test + mark them COMPLETED in student records
@@ -932,229 +906,6 @@ router.get("/teacher/batches", requireRole(["teacher", "admin"]), async (req: an
     return res.json(batches);
   } catch (err) {
     logger.error({ err }, "Batches error");
-    return res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// ── Academic Years ─────────────────────────────────────────────────────────
-
-router.get("/teacher/academic-years", requireRole(["teacher", "admin"]), async (req: any, res) => {
-  try {
-    const years = await db.select().from(academicYearsTable).orderBy(desc(academicYearsTable.startDate));
-    return res.json(years);
-  } catch (err) {
-    logger.error({ err }, "Academic years error");
-    return res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// ── Subjects ───────────────────────────────────────────────────────────────
-
-router.get("/teacher/subjects", requireRole(["teacher", "admin"]), async (req: any, res) => {
-  try {
-    const batchFilter = req.query.batch as string | undefined;
-
-    const filters: any[] = [];
-    if (batchFilter) {
-      const batch = await db.select().from(batchesTable).where(eq(batchesTable.name, batchFilter)).limit(1);
-      if (batch[0]) filters.push(eq(subjectsTable.batchId, batch[0].id));
-    }
-
-    const subjects = await db.select({
-      id: subjectsTable.id,
-      name: subjectsTable.name,
-      batchId: subjectsTable.batchId,
-      batchName: batchesTable.name,
-    }).from(subjectsTable)
-      .innerJoin(batchesTable, eq(subjectsTable.batchId, batchesTable.id))
-      .where(filters.length > 0 ? and(...filters) : sql`1=1`)
-      .orderBy(batchesTable.name, subjectsTable.name);
-
-    return res.json(subjects);
-  } catch (err) {
-    logger.error({ err }, "Subjects error");
-    return res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// ── Chapters (with progress) ───────────────────────────────────────────────
-
-router.get("/teacher/chapters", requireRole(["teacher", "admin"]), async (req: any, res) => {
-  try {
-    const batchFilter = req.query.batch as string | undefined;
-    const subjectFilter = req.query.subject as string | undefined;
-
-    let batch: { id: string; classLevel: "ELEVEN" | "TWELVE" } | undefined;
-    if (batchFilter) {
-      const rows = await db.select({ id: batchesTable.id, classLevel: batchesTable.classLevel })
-        .from(batchesTable).where(eq(batchesTable.name, batchFilter)).limit(1);
-      batch = rows[0];
-    }
-
-    const filters: any[] = [];
-    if (batch) filters.push(eq(chaptersTable.classLevel, batch.classLevel));
-    if (subjectFilter) filters.push(eq(chaptersTable.subject, subjectFilter));
-
-    const chapters = await db.select().from(chaptersTable)
-      .where(filters.length > 0 ? and(...filters) : sql`1=1`)
-      .orderBy(chaptersTable.subject, chaptersTable.orderIndex);
-
-    // Fetch chapter progress for this batch
-    let progressMap: Record<string, { status: string; startedAt: Date | null; completedAt: Date | null }> = {};
-    if (batch) {
-      const progress = await db.select({
-        chapterId: chapterProgressTable.chapterId,
-        status: chapterProgressTable.status,
-        startedAt: chapterProgressTable.startedAt,
-        completedAt: chapterProgressTable.completedAt,
-      }).from(chapterProgressTable).where(eq(chapterProgressTable.batchId, batch.id));
-      for (const p of progress) {
-        progressMap[p.chapterId] = { status: p.status, startedAt: p.startedAt, completedAt: p.completedAt };
-      }
-    }
-
-    return res.json(chapters.map(ch => ({
-      ...ch,
-      progress: progressMap[ch.id] ?? { status: "PENDING", startedAt: null, completedAt: null },
-    })));
-  } catch (err) {
-    logger.error({ err }, "Chapters error");
-    return res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// ── Chapter Progress (start / complete teaching) ───────────────────────────
-
-router.post("/teacher/chapter-progress", requireRole(["teacher", "admin"]), async (req: any, res) => {
-  try {
-    const { chapterId, batchName, action } = req.body;
-    if (!chapterId || !batchName || !action) {
-      return res.status(400).json({ error: "Missing chapterId, batchName, or action" });
-    }
-    if (!["start", "complete"].includes(action)) {
-      return res.status(400).json({ error: "action must be 'start' or 'complete'" });
-    }
-
-    const batch = await db.select().from(batchesTable).where(eq(batchesTable.name, batchName)).limit(1);
-    if (!batch[0]) return res.status(404).json({ error: "Batch not found" });
-
-    const existing = await db.select().from(chapterProgressTable)
-      .where(and(eq(chapterProgressTable.chapterId, chapterId), eq(chapterProgressTable.batchId, batch[0].id)))
-      .limit(1);
-
-    const now = new Date();
-    const teacherId = req.userId;
-
-    if (existing[0]) {
-      const updates: any = { updatedAt: now };
-      if (action === "start") {
-        updates.status = "ONGOING";
-        updates.startedAt = now;
-      } else {
-        updates.status = "COMPLETED";
-        updates.completedAt = now;
-      }
-      await db.update(chapterProgressTable).set(updates).where(eq(chapterProgressTable.id, existing[0].id));
-    } else {
-      await db.insert(chapterProgressTable).values({
-        id: crypto.randomUUID(),
-        chapterId,
-        batchId: batch[0].id,
-        teacherId,
-        status: action === "start" ? "ONGOING" : "COMPLETED",
-        startedAt: action === "start" ? now : null,
-        completedAt: action === "complete" ? now : null,
-      });
-    }
-
-    // If completing, also update all students in this batch
-    if (action === "complete") {
-      const chapter = await db.select().from(chaptersTable).where(eq(chaptersTable.id, chapterId)).limit(1);
-      if (chapter[0]) {
-        const batchStudents = await db.select({ id: studentsTable.id })
-          .from(studentsTable)
-          .where(and(eq(studentsTable.batchId, batch[0].id), eq(studentsTable.archived, false)));
-
-        for (const student of batchStudents) {
-          const sc = await db.select().from(studentChaptersTable)
-            .where(and(eq(studentChaptersTable.studentId, student.id), eq(studentChaptersTable.chapterId, chapterId)))
-            .limit(1);
-          if (sc[0]) {
-            await db.update(studentChaptersTable)
-              .set({ status: "COMPLETED", updatedAt: now })
-              .where(eq(studentChaptersTable.id, sc[0].id));
-          }
-        }
-      }
-    }
-
-    return res.json({ success: true });
-  } catch (err) {
-    logger.error({ err }, "Chapter progress error");
-    return res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// ── Leaderboard Cache (regenerate) ────────────────────────────────────────
-
-router.post("/teacher/leaderboard/regenerate", requireRole(["teacher", "admin"]), async (req: any, res) => {
-  try {
-    const { batchName } = req.body;
-    const batch = batchName
-      ? await db.select().from(batchesTable).where(eq(batchesTable.name, batchName)).limit(1)
-      : await db.select().from(batchesTable);
-
-    for (const b of batch) {
-      const batchStudents = await db.select({ id: studentsTable.id })
-        .from(studentsTable)
-        .where(and(eq(studentsTable.batchId, b.id), eq(studentsTable.archived, false)));
-
-      const types = ["OVERALL", "MONTHLY", "WEEKLY", "QUARTERLY"] as const;
-
-      for (const lbType of types) {
-        const scores: Array<{ studentId: string; avg: number }> = [];
-
-        for (const student of batchStudents) {
-          const results = await db.select({ percentage: studentTestResultsTable.percentage })
-            .from(studentTestResultsTable)
-            .innerJoin(testsTable, eq(studentTestResultsTable.testId, testsTable.id))
-            .where(and(
-              eq(studentTestResultsTable.studentId, student.id),
-              eq(testsTable.batchId, b.id),
-            ));
-
-          if (results.length === 0) {
-            scores.push({ studentId: student.id, avg: 0 });
-          } else {
-            const avg = results.reduce((s, r) => s + r.percentage, 0) / results.length;
-            scores.push({ studentId: student.id, avg: Math.round(avg * 10) / 10 });
-          }
-        }
-
-        scores.sort((a, z) => z.avg - a.avg);
-
-        // Delete existing cache for this batch + type
-        await db.delete(leaderboardCacheTable).where(
-          and(eq(leaderboardCacheTable.batchId, b.id), eq(leaderboardCacheTable.leaderboardType, lbType))
-        );
-
-        // Insert fresh ranks
-        for (let i = 0; i < scores.length; i++) {
-          await db.insert(leaderboardCacheTable).values({
-            id: crypto.randomUUID(),
-            studentId: scores[i].studentId,
-            batchId: b.id,
-            leaderboardType: lbType,
-            score: scores[i].avg,
-            rank: i + 1,
-          });
-        }
-      }
-    }
-
-    return res.json({ success: true });
-  } catch (err) {
-    logger.error({ err }, "Regenerate leaderboard error");
     return res.status(500).json({ error: "Internal server error" });
   }
 });

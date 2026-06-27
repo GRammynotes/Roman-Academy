@@ -9,9 +9,7 @@
   },
   "scripts": {
     "push": "drizzle-kit push --config ./drizzle.config.ts",
-    "push-force": "drizzle-kit push --force --config ./drizzle.config.ts",
-    "seed": "tsx ./seed.ts",
-    "reset": "tsx ./reset.ts"
+    "push-force": "drizzle-kit push --force --config ./drizzle.config.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -24,7 +22,6 @@
     "@types/bcryptjs": "^3.0.0",
     "@types/node": "catalog:",
     "@types/pg": "^8.20.0",
-    "drizzle-kit": "^0.31.10",
-    "tsx": "catalog:"
+    "drizzle-kit": "^0.31.10"
   }
 }

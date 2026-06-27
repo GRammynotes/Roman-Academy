@@ -170,29 +170,12 @@ router.get("/student/progress", requireStudent, async (req: any, res) => {
       batch: 70,
     }));
 
-    const chapters = await db.select({
-      status: studentChaptersTable.status,
-      chapterName: studentChaptersTable.chapterName,
-    }).from(studentChaptersTable)
-      .where(eq(studentChaptersTable.studentId, student.id));
-
-    const totalChapters = chapters.length;
-    const completedList = chapters.filter(c => c.status === "COMPLETED");
-    const syllabusCompletion = totalChapters > 0
-      ? Math.round((completedList.length / totalChapters) * 100)
-      : 0;
-
-    const avgScore = results.length > 0
-      ? Math.round(results.reduce((sum, r) => sum + r.percentage, 0) / results.length)
-      : null;
-
     return res.json({
       subjects: {},
       progressTrend,
-      syllabusCompletion,
-      completedChapters: completedList.map(c => c.chapterName || ""),
-      totalChapters,
-      avgScore,
+      syllabusCompletion: 60,
+      completedChapters: [],
+      totalChapters: 0,
     });
   } catch (err) {
     logger.error({ err }, "Student progress error");
