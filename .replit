@@ -1,4 +1,4 @@
-modules = ["nodejs-24", "python-3.11"]
+modules = ["nodejs-24"]
 
 [deployment]
 router = "application"
@@ -11,54 +11,13 @@ env = { "CI" = "true" }
 [workflows]
 runButton = "Project"
 
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Roman Academy Frontend"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Roman Academy API"
-
-[[workflows.workflow]]
-name = "Roman Academy Frontend"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "webview"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pnpm --filter @workspace/roman-academy run dev"
-waitForPort = 5173
-
-[[workflows.workflow]]
-name = "Roman Academy API"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=8080 pnpm --filter @workspace/api-server run dev"
-waitForPort = 8080
-
-[workflows.workflow.metadata]
-outputType = "console"
-
 [agent]
-stack = "BEST_EFFORT_FALLBACK"
+stack = "PNPM_WORKSPACE"
 expertMode = true
 
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
-
-[[ports]]
-localPort = 5173
-externalPort = 5173
 
 [[ports]]
 localPort = 8080
@@ -67,12 +26,3 @@ externalPort = 8080
 [[ports]]
 localPort = 23492
 externalPort = 80
-
-[[ports]]
-localPort = 23549
-externalPort = 3000
-
-[userenv]
-
-[userenv.shared]
-PORT = "8080"

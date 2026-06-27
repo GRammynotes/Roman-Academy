@@ -14,11 +14,12 @@ type ScheduleItem = {
 };
 
 const TEST_TYPES = [
-  { value: "WEEKLY_CHAPTER",  label: "Weekly Chapter Test  (≈ 1–2× / week)" },
-  { value: "MONTHLY",         label: "Monthly Test  (1× / month)" },
-  { value: "QUARTERLY",       label: "Quarterly Full-Length Test  (1× / quarter)" },
-  { value: "FULL_LENGTH_MOCK", label: "Full-Length Mock Test" },
-  { value: "REVISION_TEST",   label: "Revision Test" },
+  { value: "WEEKLY_1",   label: "Weekly Test – Test 1  (≈ 1–2× / week)" },
+  { value: "WEEKLY_2",   label: "Weekly Test – Test 2  (≈ 1–2× / week)" },
+  { value: "MONTHLY",    label: "Monthly Test  (1× / month)" },
+  { value: "QUARTERLY",  label: "Quarterly Full-Length Test  (1× / quarter)" },
+  { value: "YEARLY",     label: "Yearly Test  (1× / year)" },
+  { value: "MOCK",       label: "Mock Test" },
 ];
 
 const CHAPTERS: Record<string, { no: number; name: string }[]> = {
@@ -67,7 +68,7 @@ export default function SchedulePage() {
   const [form, setForm] = useState({
     batchName: "12th Science 2026",
     testName: "",
-    testType: "WEEKLY_CHAPTER",
+    testType: "WEEKLY_1",
     chapter: "Ch 1 – Motion in a Plane",
     scheduledDate: "",
   });
@@ -112,11 +113,10 @@ export default function SchedulePage() {
   };
 
   const testTypeBadge = (type: string) => {
-    if (type === "WEEKLY_CHAPTER") return "gold";
+    if (type.startsWith("WEEKLY")) return "gold";
     if (type === "MONTHLY") return "blue";
     if (type === "QUARTERLY") return "green";
-    if (type === "FULL_LENGTH_MOCK") return "purple";
-    if (type === "REVISION_TEST") return "red";
+    if (type === "YEARLY") return "red";
     return "neutral";
   };
 
@@ -161,6 +161,7 @@ export default function SchedulePage() {
               <select value={form.batchName} onChange={e => setForm(f => ({ ...f, batchName: e.target.value }))} className={SELECT_CLS}>
                 <option>12th Science 2026</option>
                 <option>11th Science 2026</option>
+                <option>12th Commerce 2026</option>
               </select>
             </label>
 
@@ -235,7 +236,7 @@ export default function SchedulePage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge tone={testTypeBadge(item.testType) as any}>{testTypeLabel(item.testType)}</Badge>
-                    <Badge tone={item.status === "upcoming" ? "gold" : "navy"}>{item.status}</Badge>
+                    <Badge tone={item.status === "upcoming" ? "gold" : "neutral"}>{item.status}</Badge>
                   </div>
                 </div>
               ))

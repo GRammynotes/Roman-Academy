@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { AppShell, PageHeader } from "@/components/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Loader2, Save, Search, User, TrendingUp, BookOpen, Phone, ChevronDown, ChevronUp, AlertCircle, Edit2, X, KeyRound, Trash2 } from "lucide-react";
+import { Plus, Loader2, Save, Search, User, TrendingUp, BookOpen, Phone, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
 
 type Student = {
   id: string;
@@ -38,15 +38,6 @@ type Analytics = {
   chapters: Array<{ chapterName: string; status: string }>;
 };
 
-type EditForm = {
-  fullName: string;
-  whatsappContact: string;
-  parentContact: string;
-  classLevel: string;
-  notes: string;
-  newPassword: string;
-};
-
 const INPUT_CLS = "h-10 w-full rounded-lg border border-gold-500/25 bg-navy-900 px-3 text-sm text-white placeholder-ivory-100/30 outline-none focus:ring-2 focus:ring-gold-400/40";
 const SELECT_CLS = "h-10 w-full rounded-lg border border-gold-500/25 bg-navy-900 px-3 text-sm text-white outline-none focus:ring-2 focus:ring-gold-400/40";
 
@@ -66,18 +57,14 @@ export default function TeacherStudents() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<Record<string, Analytics>>({});
   const [loadingAnalytics, setLoadingAnalytics] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<EditForm>({ fullName: "", whatsappContact: "", parentContact: "", classLevel: "TWELVE", notes: "", newPassword: "" });
-  const [editSaving, setEditSaving] = useState(false);
-  const [editMsg, setEditMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   const [form, setForm] = useState({
     fullName: "", studentPhone: "", parentPhone: "", classLevel: "TWELVE", stream: "SCIENCE_PCM", notes: "",
   });
 
-  const batchType = form.classLevel === "ELEVEN" ? "11th Science 2026" : "12th Science 2026";
+  const batchType = form.classLevel === "ELEVEN"
+    ? (form.stream === "COMMERCE_ADDON" ? "11th Commerce 2026" : "11th Science 2026")
+    : (form.stream === "COMMERCE_ADDON" ? "12th Commerce 2026" : "12th Science 2026");
 
   const loadStudents = (q = "", batch = "all") => {
     setLoading(true);
@@ -85,10 +72,7 @@ export default function TeacherStudents() {
     if (q) params.set("q", q);
     if (batch !== "all") params.set("batch", batch);
     fetch(`${import.meta.env.BASE_URL}api/teacher/students?${params}`)
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setStudents(Array.isArray(data) ? data : []))
-      .catch(() => setStudents([]))
-      .finally(() => setLoading(false));
+      .then(r => r.json()).then(setStudents).catch(() => setStudents([])).finally(() => setLoading(false));
   };
 
   useEffect(() => { loadStudents(); }, []);
@@ -99,7 +83,6 @@ export default function TeacherStudents() {
   }, [searchQ, batchFilter]);
 
   const loadAnalytics = async (id: string) => {
-    if (editingId === id) return;
     if (analytics[id]) { setExpanded(expanded === id ? null : id); return; }
     setLoadingAnalytics(id);
     setExpanded(id);
@@ -110,72 +93,6 @@ export default function TeacherStudents() {
     } catch {
     } finally {
       setLoadingAnalytics(null);
-    }
-  };
-
-  const startEdit = (student: Student) => {
-    setEditingId(student.id);
-    setEditMsg(null);
-    setEditForm({
-      fullName: student.fullName,
-      whatsappContact: student.whatsappContact || "",
-      parentContact: student.parentContact || "",
-      classLevel: student.classLevel,
-      notes: "",
-      newPassword: "",
-    });
-    setExpanded(student.id);
-  };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditMsg(null);
-  };
-
-  const deleteStudent = async (id: string) => {
-    setDeleting(true);
-    try {
-      const res = await fetch(`${import.meta.env.BASE_URL}api/teacher/students/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to remove student");
-      setConfirmDeleteId(null);
-      setExpanded(null);
-      setAnalytics(prev => { const n = { ...prev }; delete n[id]; return n; });
-      loadStudents(searchQ, batchFilter);
-    } catch {
-      setConfirmDeleteId(null);
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const saveEdit = async (id: string) => {
-    setEditSaving(true);
-    setEditMsg(null);
-    try {
-      const payload: any = {
-        fullName: editForm.fullName.trim(),
-        whatsappContact: editForm.whatsappContact.trim(),
-        parentContact: editForm.parentContact.trim(),
-        notes: editForm.notes.trim(),
-      };
-      if (editForm.newPassword.trim()) {
-        payload.newPassword = editForm.newPassword.trim();
-      }
-      const res = await fetch(`${import.meta.env.BASE_URL}api/students/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update");
-      setEditMsg({ type: "success", text: "Student updated successfully" });
-      setEditingId(null);
-      setAnalytics(prev => { const n = { ...prev }; delete n[id]; return n; });
-      loadStudents(searchQ, batchFilter);
-    } catch (err: any) {
-      setEditMsg({ type: "error", text: err.message });
-    } finally {
-      setEditSaving(false);
     }
   };
 
@@ -246,6 +163,8 @@ export default function TeacherStudents() {
                   <span className="font-semibold">Stream</span>
                   <select value={form.stream} onChange={e => setForm(f => ({ ...f, stream: e.target.value }))} className={SELECT_CLS}>
                     <option value="SCIENCE_PCM">Science PCM</option>
+                    <option value="NEET_ADDON">NEET</option>
+                    <option value="COMMERCE_ADDON">Commerce</option>
                   </select>
                 </label>
               </div>
@@ -277,7 +196,7 @@ export default function TeacherStudents() {
               <input
                 value={searchQ}
                 onChange={e => setSearchQ(e.target.value)}
-                placeholder="Search by name, username or phone..."
+                placeholder="Search by name..."
                 className="h-10 w-full rounded-lg border border-gold-500/25 bg-navy-900 pl-9 pr-3 text-sm text-white placeholder-ivory-100/30 outline-none focus:ring-2 focus:ring-gold-400/40"
               />
             </div>
@@ -301,7 +220,6 @@ export default function TeacherStudents() {
             <div className="space-y-3">
               {filtered.map((student) => {
                 const isOpen = expanded === student.id;
-                const isEditing = editingId === student.id;
                 const an = analytics[student.id];
                 const waLink = whatsappLink(student.whatsappContact, `Hi ${student.fullName.split(" ")[0]}, this is a message from Roman Academy.`);
 
@@ -309,11 +227,11 @@ export default function TeacherStudents() {
                   <Card key={student.id} className={`border-gold-500/20 transition-all ${isOpen ? "ring-1 ring-gold-400/30" : ""}`}>
                     <CardContent className="p-0">
                       {/* Header row */}
-                      <div className="w-full flex items-center justify-between p-4 text-left">
-                        <button
-                          onClick={() => !isEditing && loadAnalytics(student.id)}
-                          className="flex items-center gap-3 flex-1 text-left hover:opacity-80 transition-opacity"
-                        >
+                      <button
+                        onClick={() => loadAnalytics(student.id)}
+                        className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors rounded-t-xl"
+                      >
+                        <div className="flex items-center gap-3">
                           <div className="size-9 rounded-full bg-gold-400/20 flex items-center justify-center font-bold text-gold-400 text-sm shrink-0">
                             {student.fullName.slice(0, 2).toUpperCase()}
                           </div>
@@ -324,111 +242,18 @@ export default function TeacherStudents() {
                             </p>
                             <p className="text-xs text-ivory-100/50">@{student.username} · {student.whatsappContact || "No phone"}</p>
                           </div>
-                        </button>
-                        <div className="flex items-center gap-2">
+                        </div>
+                        <div className="flex items-center gap-3">
                           <div className="hidden sm:flex gap-2">
-                            <Badge tone="info">{student.classLevel === "TWELVE" ? "12th" : "11th"}</Badge>
+                            <Badge tone="blue">{student.classLevel === "TWELVE" ? "12th" : "11th"}</Badge>
                             <Badge tone="gold">{student.batchType}</Badge>
                           </div>
-                          <button
-                            onClick={() => isEditing ? cancelEdit() : startEdit(student)}
-                            className={`p-1.5 rounded-lg transition-colors ${isEditing ? "bg-red-500/20 text-red-400 hover:bg-red-500/30" : "bg-gold-400/10 text-gold-400 hover:bg-gold-400/20"}`}
-                            title={isEditing ? "Cancel edit" : "Edit student"}
-                          >
-                            {isEditing ? <X className="size-4" /> : <Edit2 className="size-4" />}
-                          </button>
-                          <button
-                            onClick={() => { if (!isEditing) setConfirmDeleteId(confirmDeleteId === student.id ? null : student.id); }}
-                            className="p-1.5 rounded-lg transition-colors text-red-400/60 hover:text-red-400 hover:bg-red-500/10"
-                            title="Remove student"
-                          >
-                            <Trash2 className="size-4" />
-                          </button>
-                          <button
-                            onClick={() => !isEditing && loadAnalytics(student.id)}
-                            className="p-1.5 text-ivory-100/40 hover:text-ivory-100/60"
-                          >
-                            {isOpen ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                          </button>
+                          {isOpen ? <ChevronUp className="size-4 text-ivory-100/40" /> : <ChevronDown className="size-4 text-ivory-100/40" />}
                         </div>
-                      </div>
-
-                      {/* Delete confirmation */}
-                      {confirmDeleteId === student.id && !isEditing && (
-                        <div className="border-t border-red-500/20 p-4 bg-red-950/20 flex items-center justify-between gap-4">
-                          <p className="text-sm text-red-300">
-                            Remove <span className="font-semibold text-white">{student.fullName}</span>? This hides them from all lists but keeps their data.
-                          </p>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <button
-                              onClick={() => deleteStudent(student.id)}
-                              disabled={deleting}
-                              className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
-                            >
-                              {deleting ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}
-                              Remove
-                            </button>
-                            <button
-                              onClick={() => setConfirmDeleteId(null)}
-                              className="px-3 py-1.5 border border-gold-500/25 text-ivory-100/60 text-xs rounded-lg hover:bg-white/5 transition-colors"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Edit form */}
-                      {isEditing && (
-                        <div className="border-t border-gold-500/10 p-4 space-y-3 bg-navy-900/40">
-                          <p className="text-xs font-bold text-gold-400 uppercase tracking-wider">Edit Student Profile</p>
-                          <div className="grid sm:grid-cols-2 gap-3">
-                            <label className="block space-y-1 text-xs text-ivory-100/70">
-                              <span className="font-semibold">Full Name</span>
-                              <input value={editForm.fullName} onChange={e => setEditForm(f => ({ ...f, fullName: e.target.value }))} className={INPUT_CLS} />
-                            </label>
-                            <label className="block space-y-1 text-xs text-ivory-100/70">
-                              <span className="font-semibold">Class</span>
-                              <select value={editForm.classLevel} onChange={e => setEditForm(f => ({ ...f, classLevel: e.target.value }))} className={SELECT_CLS}>
-                                <option value="TWELVE">12th Standard</option>
-                                <option value="ELEVEN">11th Standard</option>
-                              </select>
-                            </label>
-                            <label className="block space-y-1 text-xs text-ivory-100/70">
-                              <span className="font-semibold">Student WhatsApp</span>
-                              <input value={editForm.whatsappContact} onChange={e => setEditForm(f => ({ ...f, whatsappContact: e.target.value }))} className={INPUT_CLS} placeholder="+91..." />
-                            </label>
-                            <label className="block space-y-1 text-xs text-ivory-100/70">
-                              <span className="font-semibold">Parent WhatsApp</span>
-                              <input value={editForm.parentContact} onChange={e => setEditForm(f => ({ ...f, parentContact: e.target.value }))} className={INPUT_CLS} placeholder="+91..." />
-                            </label>
-                          </div>
-                          <label className="block space-y-1 text-xs text-ivory-100/70">
-                            <span className="font-semibold flex items-center gap-1"><KeyRound className="size-3" /> Reset Password (leave blank to keep current)</span>
-                            <input type="password" value={editForm.newPassword} onChange={e => setEditForm(f => ({ ...f, newPassword: e.target.value }))} className={INPUT_CLS} placeholder="New password..." />
-                          </label>
-                          <label className="block space-y-1 text-xs text-ivory-100/70">
-                            <span className="font-semibold">Notes</span>
-                            <textarea value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} className="min-h-14 w-full resize-none rounded-lg border border-gold-500/25 bg-navy-900 px-3 py-2 text-sm text-white placeholder-ivory-100/30 outline-none focus:ring-2 focus:ring-gold-400/40" placeholder="Optional notes" />
-                          </label>
-                          {editMsg && (
-                            <div className={`p-2.5 rounded-lg text-xs border ${editMsg.type === "success" ? "bg-emerald-900/30 border-emerald-700/40 text-emerald-300" : "bg-red-900/30 border-red-700/40 text-red-300"}`}>
-                              {editMsg.text}
-                            </div>
-                          )}
-                          <div className="flex gap-2">
-                            <button onClick={() => saveEdit(student.id)} disabled={editSaving} className="flex-1 py-2 bg-gold-400 text-navy-950 font-bold rounded-lg hover:bg-gold-300 disabled:opacity-50 flex items-center justify-center gap-2 text-sm transition-colors">
-                              {editSaving ? <Loader2 className="size-3.5 animate-spin" /> : <><Save className="size-3.5" /> Save Changes</>}
-                            </button>
-                            <button onClick={cancelEdit} className="px-4 py-2 border border-gold-500/25 text-ivory-100/70 rounded-lg hover:bg-white/5 text-sm transition-colors">
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                      </button>
 
                       {/* Expanded Analytics */}
-                      {isOpen && !isEditing && (
+                      {isOpen && (
                         <div className="border-t border-gold-500/10 p-4 space-y-4">
                           {loadingAnalytics === student.id ? (
                             <div className="text-center py-6 text-ivory-100/50">
@@ -496,7 +321,7 @@ export default function TeacherStudents() {
                               )}
 
                               {/* WhatsApp quick action */}
-                              <div className="flex gap-2 flex-wrap">
+                              <div className="flex gap-2">
                                 {waLink ? (
                                   <a
                                     href={waLink}

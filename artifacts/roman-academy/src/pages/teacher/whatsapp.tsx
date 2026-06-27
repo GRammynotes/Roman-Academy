@@ -174,7 +174,7 @@ export default function WhatsAppPage() {
                     <CardTitle className="text-white text-base">{draft.student}</CardTitle>
                     <p className="text-xs text-ivory-100/50 mt-0.5">{draft.cadence} · {draft.batchType}</p>
                   </div>
-                  <Badge tone={draft.status === "DRAFT" ? "gold" : "info"}>{draft.status}</Badge>
+                  <Badge tone={draft.status === "DRAFT" ? "gold" : "blue"}>{draft.status}</Badge>
                 </CardHeader>
                 <CardContent className="p-4 space-y-3">
                   <textarea
