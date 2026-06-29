@@ -1,0 +1,4 @@
+[build.environment]
+  # pnpm-lock.yaml contains dependency integrity metadata that can be
+  # mistaken for secrets by Netlify's scanner.
+  SECRETS_SCAN_OMIT_PATHS = "pnpm-lock.yaml"
